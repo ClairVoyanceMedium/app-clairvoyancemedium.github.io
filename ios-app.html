@@ -69,11 +69,13 @@
       return;
     }
     try{
-      await OneSignal.init({
+      const initOptions={
         appId:cfg.oneSignalAppId,
-        serviceWorkerPath:cfg.serviceWorkerPath||'OneSignalSDKWorker.js',
+        serviceWorkerPath:cfg.serviceWorkerPath||'app-clairvoyancemedium.github.io/OneSignalSDKWorker.js',
         serviceWorkerParam:{scope:cfg.serviceWorkerScope||'/app-clairvoyancemedium.github.io/'}
-      });
+      };
+      if(cfg.safariWebId)initOptions.safari_web_id=cfg.safariWebId;
+      await OneSignal.init(initOptions);
       OneSignalClient=OneSignal;
       await OneSignal.User.addTags({brand:'clairvoyancemedium',platform:'ios_web',distribution:'pwa'});
       if(OneSignal.User.trackEvent) await OneSignal.User.trackEvent('app_open');
