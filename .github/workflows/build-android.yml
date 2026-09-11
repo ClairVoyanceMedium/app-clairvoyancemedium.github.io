@@ -9,6 +9,7 @@ on:
       - 'lib/**'
       - 'pubspec.yaml'
       - 'assets/**'
+      - 'firebase/**'
       - '.github/workflows/build-android.yml'
 
 permissions:
@@ -36,7 +37,7 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Create Android project and decode official icon
+      - name: Create Android project, Firebase config and official icon
         shell: bash
         run: |
           rm -rf .build_app
@@ -45,10 +46,11 @@ jobs:
           rm -rf .build_app/lib .build_app/test
           cp -R lib .build_app/lib
           mkdir -p .build_app/assets
+          cp firebase/google-services.json .build_app/android/app/google-services.json
 
           python3 - <<'PY'
           from pathlib import Path
-          import base64, re
+          import base64, json, re
 
           src = Path('assets/app_icon_512.png.b64').read_text(encoding='utf-8')
           clean = re.sub(r'[^A-Za-z0-9+/=]', '', src)
@@ -58,7 +60,13 @@ jobs:
           if not raw.startswith(b'\xff\xd8\xff'):
               raise SystemExit('Le fichier du logo decode ne correspond pas a un JPEG valide')
           Path('.build_app/assets/app_icon.jpg').write_bytes(raw)
-          print(f'Logo officiel decode et valide: {len(raw)} octets')
+
+          cfg = json.loads(Path('.build_app/android/app/google-services.json').read_text(encoding='utf-8'))
+          package_name = cfg['client'][0]['client_info']['android_client_info']['package_name']
+          expected = 'com.clairvoyancemedium.clairvoyancemedium_app'
+          if package_name != expected:
+              raise SystemExit(f'Package Firebase inattendu: {package_name} != {expected}')
+          print(f'Firebase Android valide pour {package_name}')
           PY
 
           python3 - <<'PY'
@@ -79,6 +87,39 @@ jobs:
               'android:label="ClairVoyanceMedium.com"',
           )
           manifest.write_text(text, encoding='utf-8')
+
+          settings_kts = Path('.build_app/android/settings.gradle.kts')
+          settings_groovy = Path('.build_app/android/settings.gradle')
+          app_kts = Path('.build_app/android/app/build.gradle.kts')
+          app_groovy = Path('.build_app/android/app/build.gradle')
+
+          if settings_kts.exists():
+              s = settings_kts.read_text(encoding='utf-8')
+              marker = 'id("com.android.application")'
+              if 'com.google.gms.google-services' not in s:
+                  s = s.replace(marker, 'id("com.google.gms.google-services") version "4.4.4" apply false\n    ' + marker, 1)
+              settings_kts.write_text(s, encoding='utf-8')
+          elif settings_groovy.exists():
+              s = settings_groovy.read_text(encoding='utf-8')
+              marker = "id 'com.android.application'"
+              if 'com.google.gms.google-services' not in s:
+                  s = s.replace(marker, "id 'com.google.gms.google-services' version '4.4.4' apply false\n    " + marker, 1)
+              settings_groovy.write_text(s, encoding='utf-8')
+
+          if app_kts.exists():
+              s = app_kts.read_text(encoding='utf-8')
+              marker = 'id("com.android.application")'
+              if 'com.google.gms.google-services' not in s:
+                  s = s.replace(marker, marker + '\n    id("com.google.gms.google-services")', 1)
+              app_kts.write_text(s, encoding='utf-8')
+          elif app_groovy.exists():
+              s = app_groovy.read_text(encoding='utf-8')
+              marker = "id 'com.android.application'"
+              if 'com.google.gms.google-services' not in s:
+                  s = s.replace(marker, marker + "\n    id 'com.google.gms.google-services'", 1)
+              app_groovy.write_text(s, encoding='utf-8')
+          else:
+              raise SystemExit('Fichier Gradle Android introuvable')
           PY
 
       - name: Install dependencies
@@ -114,7 +155,7 @@ jobs:
         shell: bash
         run: |
           flutter build apk --release \
-            --build-name=0.2.0 \
+            --build-name=0.2.1 \
             --build-number=${{ github.run_number }} \
             --dart-define=ONESIGNAL_APP_ID="$ONESIGNAL_APP_ID"
 
@@ -134,7 +175,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          NOTES='Version Android 0.2.0 avec logo officiel, WebView du site en temps réel et structure de notifications push OneSignal. Les notifications deviennent actives dès que ONESIGNAL_APP_ID est configuré dans les secrets GitHub.'
+          NOTES='Version Android 0.2.1 reliée au projet Firebase ClairVoyanceMedium, avec logo officiel, WebView du site en temps réel et structure OneSignal. Les notifications deviennent actives dès que ONESIGNAL_APP_ID et la configuration OneSignal/FCM sont terminés.'
           if gh release view android-latest >/dev/null 2>&1; then
             gh release upload android-latest ClairVoyanceMedium.apk --clobber
             gh release edit android-latest --title 'ClairVoyanceMedium Android' --notes "$NOTES" --latest
