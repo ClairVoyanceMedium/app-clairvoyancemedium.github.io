@@ -147,7 +147,7 @@ jobs:
           APK=.build_app/build/app/outputs/flutter-apk/app-release.apk
           "$APKSIGNER" verify --verbose --print-certs "$APK" | tee signing-report.txt
           APK_SHA=$(awk -F': ' '/Signer #1 certificate SHA-256 digest/ {print toupper($2); exit}' signing-report.txt)
-          EXPECTED_SHA=DDEAD93857F573E3232AF588181EB0282D4CEC93FD417D18B90D10CE755F6A38
+          EXPECTED_SHA=484D0FB25FF68EE40489194F166C17E00052361935D30952404DCD671C99C4FB
           test "$APK_SHA" = "$EXPECTED_SHA" || { echo "::error::Signature APK inattendue: $APK_SHA"; exit 1; }
 
       - name: Prepare downloadable APK
