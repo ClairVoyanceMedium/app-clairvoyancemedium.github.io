@@ -4,7 +4,6 @@ import gzip
 import io
 import json
 import os
-import sys
 import time
 import urllib.error
 import urllib.parse
@@ -17,14 +16,13 @@ APP_ID = os.environ.get('ONESIGNAL_APP_ID', '').strip()
 API_KEY = os.environ.get('ONESIGNAL_API_KEY', '').strip()
 OUT = Path(os.environ.get('METRICS_OUTPUT', 'metrics-private.json'))
 
-if not APP_ID or not API_KEY:
-    sys.exit('ONESIGNAL_APP_ID et ONESIGNAL_API_KEY doivent être configurés dans GitHub Secrets.')
-
 HEADERS = {
     'Authorization': f'Key {API_KEY}',
     'Content-Type': 'application/json',
     'Accept': 'application/json',
 }
+
+errors = []
 
 
 def request_json(url, method='GET', payload=None, headers=None):
@@ -78,91 +76,107 @@ def platform_name(row):
     }.get(dtype, f'Autre ({dtype or "inconnu"})')
 
 
-# 1) Export des abonnements OneSignal. Les tokens push, IP et identifiants
-# personnels bruts ne sont jamais conservés dans l'artefact du tableau de bord.
-export = request_json(
-    f'https://api.onesignal.com/players/csv_export?app_id={urllib.parse.quote(APP_ID)}',
-    method='POST',
-    payload={
-        'extra_fields': [
-            'country',
-            'unsubscribed_at',
-            'notification_types',
-            'timezone_id',
-        ],
-    },
-)
-csv_url = export.get('csv_file_url')
-if not csv_url:
-    raise RuntimeError(f'Export CSV OneSignal invalide: {export}')
-
-raw = None
-for attempt in range(12):
-    try:
-        with urllib.request.urlopen(csv_url, timeout=60) as r:
-            raw = r.read()
-        break
-    except urllib.error.HTTPError as exc:
-        if exc.code != 404 or attempt == 11:
-            raise
-        time.sleep(min(2 + attempt * 2, 15))
-
-if raw is None:
-    raise RuntimeError('Le CSV OneSignal n’a pas pu être téléchargé.')
-
-try:
-    text = gzip.decompress(raw).decode('utf-8-sig')
-except OSError:
-    text = raw.decode('utf-8-sig')
-
-rows = list(csv.DictReader(io.StringIO(text)))
 subscriptions = []
-for row in rows:
-    unsubscribed = is_truthy(row.get('invalid_identifier'))
-    sid = str(row.get('id', '') or '')
-    subscriptions.append({
-        'id_short': sid[:8] + ('…' if len(sid) > 8 else ''),
-        'platform': platform_name(row),
-        'status': 'désabonné' if unsubscribed else 'abonné',
-        'created_at': unix_or_iso(row.get('created_at')),
-        'last_active': unix_or_iso(row.get('last_active')),
-        'unsubscribed_at': unix_or_iso(row.get('unsubscribed_at')),
-        'country': row.get('country') or '',
-        'language': row.get('language') or '',
-        'timezone': row.get('timezone_id') or '',
-        'device_model': row.get('device_model') or '',
-        'device_os': row.get('device_os') or '',
-        'app_version': row.get('game_version') or '',
-        'session_count': int(float(row.get('session_count') or 0)),
-        'playtime_seconds': int(float(row.get('playtime') or 0)),
-        'notification_types': row.get('notification_types') or '',
-    })
-
-# 2) Notifications récentes et performances.
-messages_response = request_json(
-    f'https://api.onesignal.com/notifications?app_id={urllib.parse.quote(APP_ID)}&limit=50&offset=0'
-)
 messages = []
-for msg in messages_response.get('notifications', []):
-    headings = msg.get('headings') or {}
-    contents = msg.get('contents') or {}
-    messages.append({
-        'id': msg.get('id'),
-        'title': headings.get('fr') or headings.get('en') or msg.get('name') or '',
-        'message': contents.get('fr') or contents.get('en') or '',
-        'queued_at': unix_or_iso(msg.get('queued_at')),
-        'completed_at': unix_or_iso(msg.get('completed_at')),
-        'successful': int(msg.get('successful') or 0),
-        'received': int(msg.get('received') or 0),
-        'clicked': int(msg.get('converted') or 0),
-        'failed': int(msg.get('failed') or 0),
-        'errored': int(msg.get('errored') or 0),
-        'remaining': int(msg.get('remaining') or 0),
-        'url': msg.get('url') or msg.get('web_url') or msg.get('app_url') or '',
-    })
+messages_total_api_visible = 0
 
-# 3) Téléchargements du dernier APK GitHub Release. Un téléchargement n'est
-# pas automatiquement une installation ; cette métrique reste donc distincte.
+if not APP_ID or not API_KEY:
+    errors.append('Clés OneSignal manquantes dans GitHub Secrets. Les métriques OneSignal ne peuvent pas être lues.')
+else:
+    # 1) Abonnements OneSignal. Une panne de cette source ne bloque plus
+    # la création de l’artefact : les autres métriques restent disponibles.
+    try:
+        export = request_json(
+            f'https://api.onesignal.com/players/csv_export?app_id={urllib.parse.quote(APP_ID)}',
+            method='POST',
+            payload={
+                'extra_fields': [
+                    'country',
+                    'unsubscribed_at',
+                    'notification_types',
+                    'timezone_id',
+                ],
+            },
+        )
+        csv_url = export.get('csv_file_url')
+        if not csv_url:
+            raise RuntimeError(f'Export CSV OneSignal invalide: {export}')
+
+        raw = None
+        for attempt in range(12):
+            try:
+                with urllib.request.urlopen(csv_url, timeout=60) as r:
+                    raw = r.read()
+                break
+            except urllib.error.HTTPError as exc:
+                if exc.code != 404 or attempt == 11:
+                    raise
+                time.sleep(min(2 + attempt * 2, 15))
+
+        if raw is None:
+            raise RuntimeError('Le CSV OneSignal n’a pas pu être téléchargé.')
+
+        try:
+            text = gzip.decompress(raw).decode('utf-8-sig')
+        except OSError:
+            text = raw.decode('utf-8-sig')
+
+        rows = list(csv.DictReader(io.StringIO(text)))
+        for row in rows:
+            unsubscribed = is_truthy(row.get('invalid_identifier'))
+            sid = str(row.get('id', '') or '')
+            subscriptions.append({
+                'id_short': sid[:8] + ('…' if len(sid) > 8 else ''),
+                'platform': platform_name(row),
+                'status': 'désabonné' if unsubscribed else 'abonné',
+                'created_at': unix_or_iso(row.get('created_at')),
+                'last_active': unix_or_iso(row.get('last_active')),
+                'unsubscribed_at': unix_or_iso(row.get('unsubscribed_at')),
+                'country': row.get('country') or '',
+                'language': row.get('language') or '',
+                'timezone': row.get('timezone_id') or '',
+                'device_model': row.get('device_model') or '',
+                'device_os': row.get('device_os') or '',
+                'app_version': row.get('game_version') or '',
+                'session_count': int(float(row.get('session_count') or 0)),
+                'playtime_seconds': int(float(row.get('playtime') or 0)),
+                'notification_types': row.get('notification_types') or '',
+            })
+    except Exception as exc:
+        errors.append(f'Abonnements OneSignal indisponibles: {exc}')
+
+    # 2) Notifications récentes. Même principe : on conserve les métriques
+    # disponibles si l’API notifications échoue temporairement.
+    try:
+        messages_response = request_json(
+            f'https://api.onesignal.com/notifications?app_id={urllib.parse.quote(APP_ID)}&limit=50&offset=0'
+        )
+        messages_total_api_visible = int(messages_response.get('total_count') or 0)
+        for msg in messages_response.get('notifications', []):
+            headings = msg.get('headings') or {}
+            contents = msg.get('contents') or {}
+            messages.append({
+                'id': msg.get('id'),
+                'title': headings.get('fr') or headings.get('en') or msg.get('name') or '',
+                'message': contents.get('fr') or contents.get('en') or '',
+                'queued_at': unix_or_iso(msg.get('queued_at')),
+                'completed_at': unix_or_iso(msg.get('completed_at')),
+                'successful': int(msg.get('successful') or 0),
+                'received': int(msg.get('received') or 0),
+                'clicked': int(msg.get('converted') or 0),
+                'failed': int(msg.get('failed') or 0),
+                'errored': int(msg.get('errored') or 0),
+                'remaining': int(msg.get('remaining') or 0),
+                'url': msg.get('url') or msg.get('web_url') or msg.get('app_url') or '',
+            })
+        if not messages_total_api_visible:
+            messages_total_api_visible = len(messages)
+    except Exception as exc:
+        errors.append(f'Notifications OneSignal indisponibles: {exc}')
+
+
+# 3) Téléchargements du dernier APK GitHub Release. Cette source est publique
+# et reste disponible même si OneSignal est mal configuré.
 apk_downloads = 0
 apk_release_updated_at = None
 apk_size = None
@@ -178,7 +192,7 @@ try:
             apk_size = int(asset.get('size') or 0)
             break
 except Exception as exc:
-    print(f'Avertissement: métrique téléchargement APK indisponible: {exc}', file=sys.stderr)
+    errors.append(f'Téléchargements APK indisponibles: {exc}')
 
 now = datetime.now(timezone.utc)
 new_24h = 0
@@ -210,6 +224,14 @@ notifications_failed = sum(m['failed'] + m['errored'] for m in messages)
 
 payload = {
     'generated_at': now.isoformat(),
+    'partial': bool(errors),
+    'errors': errors,
+    'sources': {
+        'onesignal_configured': bool(APP_ID and API_KEY),
+        'subscriptions_loaded': len(subscriptions),
+        'messages_loaded': len(messages),
+        'github_apk_loaded': apk_size is not None,
+    },
     'privacy': 'Les tokens push, adresses IP, identifiants OneSignal complets et autres secrets sont exclus de cet artefact.',
     'summary': {
         'subscriptions_total': len(subscriptions),
@@ -226,7 +248,7 @@ payload = {
         'apk_downloads': apk_downloads,
         'apk_release_updated_at': apk_release_updated_at,
         'apk_size_bytes': apk_size,
-        'messages_total_api_visible': int(messages_response.get('total_count') or len(messages)),
+        'messages_total_api_visible': messages_total_api_visible,
         'messages_loaded': len(messages),
         'notifications_sent_recent': notifications_sent,
         'notifications_received_recent': notifications_received,
@@ -241,4 +263,6 @@ payload = {
 }
 
 OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-print(f'Métriques écrites dans {OUT} : {subscribed} abonnés actifs, {unsubscribed} désabonnés, {apk_downloads} téléchargements APK.')
+print(f'Métriques écrites dans {OUT} : {subscribed} abonnés actifs, {unsubscribed} désabonnés, {apk_downloads} téléchargements APK, {len(errors)} avertissement(s).')
+for err in errors:
+    print('AVERTISSEMENT:', err)
