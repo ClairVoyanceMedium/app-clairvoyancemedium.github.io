@@ -1,0 +1,61 @@
+name: Publish iOS web icons
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'assets/app_icon_512.png.b64'
+      - '.github/workflows/publish-ios-web-icon.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish-icons:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Decode official logo
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, re
+          src=Path('assets/app_icon_512.png.b64').read_text(encoding='utf-8')
+          clean=re.sub(r'[^A-Za-z0-9+/=]','',src).rstrip('=')
+          clean += '=' * (-len(clean) % 4)
+          raw=base64.b64decode(clean,validate=False)
+          if not raw.startswith(b'\xff\xd8\xff'):
+              raise SystemExit('Le logo source n’est pas un JPEG valide')
+          Path('/tmp/app_icon.jpg').write_bytes(raw)
+          PY
+
+      - name: Convert web icons
+        shell: bash
+        run: |
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          Path('assets').mkdir(exist_ok=True)
+          img=Image.open('/tmp/app_icon.jpg').convert('RGB')
+          img.resize((512,512),Image.Resampling.LANCZOS).save('assets/app_icon.png',format='PNG',optimize=True)
+          img.resize((192,192),Image.Resampling.LANCZOS).save('assets/app_icon-192.png',format='PNG',optimize=True)
+          PY
+
+      - name: Commit generated icons
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/app_icon.png assets/app_icon-192.png
+          if git diff --cached --quiet; then
+            echo 'Icons already up to date'
+          else
+            git commit -m 'Publie les icônes iOS web officielles'
+            git push
+          fi
