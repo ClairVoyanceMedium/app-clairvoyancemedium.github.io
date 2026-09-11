@@ -14,80 +14,100 @@
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;min-height:100%;background:#070707;color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     body{background:radial-gradient(circle at 50% -10%,rgba(215,173,74,.18),transparent 35%),#070707}
-    button,a{touch-action:manipulation}
-    .wrap{min-height:100dvh;padding:22px 14px 130px}
+    .wrap{min-height:100dvh;padding:22px 14px 90px}
     .card{width:min(760px,100%);margin:auto;border:1px solid var(--line);border-radius:24px;background:linear-gradient(180deg,#151515,#0b0b0b);box-shadow:0 24px 70px rgba(0,0,0,.5);padding:26px 18px;text-align:center}
     .logo{width:84px;height:84px;border-radius:22px;margin:0 auto 15px;object-fit:cover;border:1px solid #725b27;background:#111}
-    .eyebrow{color:var(--gold2);font-size:12px;text-transform:uppercase;letter-spacing:1.6px}.card h1{font-size:clamp(27px,7vw,46px);margin:8px 0}.lead{color:var(--muted);line-height:1.55;margin:0 auto 18px;max-width:620px}
-    .guide{display:none;text-align:left;margin-top:18px}.guide.show{display:block}.guide-head{border:1px solid #705a2d;background:#17130b;border-radius:17px;padding:15px;margin-bottom:12px}.guide-head strong{display:block;color:var(--gold2);font-size:18px;margin-bottom:4px}.guide-head span{font-size:13px;line-height:1.5;color:#d0cbc0}
-    .steps{display:grid;gap:10px}.step{position:relative;border:1px solid #2c2922;border-radius:17px;background:#0d0d0d;padding:15px 14px 15px 58px;transition:.2s}.step.active{border-color:#b98b2f;background:linear-gradient(180deg,#17130c,#0d0d0d);box-shadow:0 0 0 1px rgba(215,173,74,.09)}.step.done{border-color:#28563c;background:#0c1510}.step.tap{cursor:pointer}.num{position:absolute;left:14px;top:15px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#242018;border:1px solid #5a4825;color:var(--gold2);font-weight:900}.step.done .num{background:#11321f;border-color:#377c53;color:#99efb8}.step h2{font-size:16px;margin:0 0 5px;color:#f4efe5}.step p{font-size:13px;line-height:1.5;color:#bdb7ad;margin:0 0 10px}
-    .hint{font-size:12px;line-height:1.55;color:#f0ddb1;border-left:3px solid #9b762c;padding-left:9px;margin:9px 0}.notice{margin:10px 0;padding:12px;border:1px solid #3b4d63;border-radius:13px;background:#0b1118;color:#d9e7f7;font-size:13px;line-height:1.5}.notice strong{color:#fff}
-    .btn{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;min-height:52px;width:100%;padding:12px 15px;border-radius:13px;text-decoration:none;font:inherit;font-weight:800;border:1px solid #5d4a22;background:#14110b;color:var(--gold2);cursor:pointer;user-select:none;-webkit-user-select:none}.btn:active{transform:scale(.992)}.btn.primary{background:linear-gradient(135deg,#e2bb5c,#a77b1f);border-color:#dbb354;color:#0b0905}.btn.green{background:#12311f;border-color:#367a50;color:#b7f2cb}.btn.secondary{background:#101010}.btn+.btn{margin-top:8px}
-    .hidden{display:none!important}.platform{margin:16px 0 0;color:var(--green);font-size:12px}.web{margin-top:14px}.small{margin-top:20px;color:#716d65;font-size:11px}.small a{color:#bfa86d}.admin{margin-top:10px;font-size:11px}.admin a{color:#8d835f}
-    .success{display:none;margin-top:12px;border:1px solid #34744d;background:#0c1811;border-radius:16px;padding:14px;text-align:left}.success.show{display:block}.success strong{color:#a7efbf;display:block;margin-bottom:5px}.success p{font-size:13px;line-height:1.5;color:#c6d7cb;margin:0}
-    .toast{position:fixed;left:8px;right:8px;top:max(8px,env(safe-area-inset-top));z-index:10000;pointer-events:none;transform:translateY(-145%);opacity:0;transition:.22s ease}.toast.show{transform:translateY(0);opacity:1}.toast-card{pointer-events:auto;max-width:720px;margin:auto;border:1px solid #856527;border-radius:18px;background:linear-gradient(180deg,#191919,#0a0a0a);box-shadow:0 18px 55px rgba(0,0,0,.72);padding:13px 14px}.toast-title{font-weight:900;color:var(--gold2);margin:0 0 4px;font-size:16px}.toast-text{font-size:13px;line-height:1.45;color:#d5d0c6;margin:0}.toast-row{display:flex;align-items:center;gap:10px}.spinner{width:22px;height:22px;border-radius:50%;border:3px solid #4b4027;border-top-color:#f0c963;animation:spin .8s linear infinite;flex:0 0 auto}.progress{height:5px;margin-top:9px;border-radius:999px;background:#2a251a;overflow:hidden}.progress>span{display:block;width:42%;height:100%;border-radius:999px;background:linear-gradient(90deg,#94701f,#f0cf70,#94701f);animation:progress 1.35s ease-in-out infinite}.toast-meta{display:flex;justify-content:space-between;gap:8px;margin-top:7px;color:#918978;font-size:11px}.toast-extra{display:none;margin-top:8px;padding:9px 10px;border-radius:11px;background:#101720;color:#e2ebf7;font-size:12px;line-height:1.45}.toast-extra.show{display:block}.toast-actions{display:flex;gap:7px;margin-top:9px}.toast-actions .btn{min-height:44px;font-size:12px}.retry{display:none}.retry.show{display:flex}.toast-close{flex:0 0 auto;width:auto;padding-left:14px;padding-right:14px}
-    @keyframes spin{to{transform:rotate(360deg)}}@keyframes progress{0%{transform:translateX(-120%)}100%{transform:translateX(270%)}}
-    @media(min-width:650px){.card{padding:32px}.step{padding-right:18px}.btn+.btn{margin-top:0}}
+    .eyebrow{color:var(--gold2);font-size:12px;text-transform:uppercase;letter-spacing:1.6px}
+    h1{font-size:clamp(27px,7vw,46px);margin:8px 0}.lead{color:var(--muted);line-height:1.55;margin:0 auto 20px;max-width:620px}
+    .guide{display:none;text-align:left}.guide.show{display:block}
+    .download-box{border:1px solid #705a2d;background:#17130b;border-radius:18px;padding:16px;margin-bottom:12px}
+    .download-box h2{font-size:19px;margin:0 0 6px;color:var(--gold2)}.download-box p{margin:0 0 14px;color:#d0cbc0;font-size:13px;line-height:1.5}
+    .download-btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:54px;padding:13px 16px;border-radius:14px;text-decoration:none;font-weight:900;background:linear-gradient(135deg,#e2bb5c,#a77b1f);border:1px solid #dbb354;color:#0b0905;touch-action:manipulation}
+    .download-btn:active{transform:scale(.992)}
+    .steps{display:grid;gap:10px;margin-top:12px}
+    .step{position:relative;border:1px solid #2c2922;border-radius:17px;background:#0d0d0d;padding:15px 14px 15px 58px}
+    .num{position:absolute;left:14px;top:15px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#242018;border:1px solid #5a4825;color:var(--gold2);font-weight:900}
+    .step h3{font-size:16px;margin:0 0 5px;color:#f4efe5}.step p{font-size:13px;line-height:1.55;color:#bdb7ad;margin:0}
+    .notice{border-color:#3b4d63;background:#0b1118}.notice p{color:#d9e7f7}.notice strong{color:#fff}
+    .warning{border-color:#6c5421;background:#151109}.warning p{color:#e7d5ae}
+    .platform{margin-top:16px;color:var(--green);font-size:12px;text-align:center}
+    .footer{margin-top:18px;text-align:center;color:#716d65;font-size:11px;line-height:1.6}.footer a{color:#bfa86d}
+    .toast{position:fixed;left:8px;right:8px;top:max(8px,env(safe-area-inset-top));z-index:10000;pointer-events:none;transform:translateY(-145%);opacity:0;transition:.22s ease}.toast.show{transform:translateY(0);opacity:1}
+    .toast-card{max-width:720px;margin:auto;border:1px solid #856527;border-radius:18px;background:linear-gradient(180deg,#191919,#0a0a0a);box-shadow:0 18px 55px rgba(0,0,0,.72);padding:13px 14px}
+    .toast-row{display:flex;align-items:flex-start;gap:10px}.spinner{width:22px;height:22px;margin-top:1px;border-radius:50%;border:3px solid #4b4027;border-top-color:#f0c963;animation:spin .8s linear infinite;flex:0 0 auto}
+    .toast-title{font-weight:900;color:var(--gold2);margin:0 0 3px;font-size:15px}.toast-text{font-size:12px;line-height:1.45;color:#d5d0c6;margin:0}.elapsed{display:block;margin-top:5px;color:#918978;font-size:11px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(min-width:650px){.card{padding:32px}}
   </style>
 </head>
 <body>
-<main class="wrap"><section class="card">
-  <img class="logo" src="assets/app_icon.png" alt="ClairVoyanceMedium.com">
-  <div class="eyebrow">Application officielle</div>
-  <h1>ClairVoyanceMedium.com</h1>
-  <p class="lead">La page détecte automatiquement Android ou iPhone/iPad et affiche le bon parcours d’installation.</p>
+<main class="wrap">
+  <section class="card">
+    <img class="logo" src="assets/app_icon.png" alt="ClairVoyanceMedium.com">
+    <div class="eyebrow">Application officielle</div>
+    <h1>ClairVoyanceMedium.com</h1>
+    <p class="lead">Installation simple et directe de l’application.</p>
 
-  <section class="guide" id="androidGuide">
-    <div class="guide-head"><strong>Installation Android guidée</strong><span>Compatible avec les téléphones Android et les principaux navigateurs. Aucun bouton de cette page n’essaie d’ouvrir une application de téléchargements externe.</span></div>
-    <div class="steps">
-      <article class="step active tap" id="stepDownload" role="button" tabindex="0" aria-label="Télécharger ClairVoyanceMedium">
-        <div class="num">1</div><h2>Télécharger l’application</h2><p>Le fichier officiel est <strong>ClairVoyanceMedium.apk</strong> et fait environ 46 Mo.</p>
-        <a class="btn primary" id="downloadBtn" href="https://github.com/ClairVoyanceMedium/app-clairvoyancemedium.github.io/releases/download/android-latest/ClairVoyanceMedium.apk">Télécharger ClairVoyanceMedium</a>
-      </article>
+    <section class="guide" id="androidGuide">
+      <div class="download-box">
+        <h2>1. Télécharger l’application</h2>
+        <p>Fichier officiel Android : <strong>ClairVoyanceMedium.apk</strong> · environ 46 Mo.</p>
+        <a class="download-btn" id="downloadBtn" href="https://github.com/ClairVoyanceMedium/app-clairvoyancemedium.github.io/releases/download/android-latest/ClairVoyanceMedium.apk">Télécharger ClairVoyanceMedium</a>
+      </div>
 
-      <article class="step" id="stepInstall">
-        <div class="num">2</div><h2>Suivre puis ouvrir le téléchargement</h2>
-        <p>Le téléchargement est géré directement par votre navigateur Android.</p>
-        <div class="notice"><strong>Pour voir l’avancée :</strong> faites glisser votre doigt du haut de l’écran vers le bas pour ouvrir le <strong>volet de notifications</strong>. Vous y verrez la progression de <strong>ClairVoyanceMedium.apk</strong>.</div>
-        <p>Quand le téléchargement est terminé, touchez la notification <strong>ClairVoyanceMedium.apk</strong> ou le message <strong>« Ouvrir le fichier »</strong>, puis choisissez <strong>Installer</strong>.</p>
-        <div class="hint">Si Android indique que votre navigateur n’est pas autorisé à installer des applications, touchez <strong>Paramètres</strong>, activez <strong>« Autoriser depuis cette source »</strong>, puis revenez au fichier APK.</div>
-        <button class="btn secondary" type="button" id="blockedBtn">L’installation est bloquée</button>
-      </article>
+      <div class="steps">
+        <article class="step notice">
+          <div class="num">2</div>
+          <h3>Suivre le téléchargement</h3>
+          <p><strong>Faites glisser votre doigt du haut de l’écran vers le bas</strong> pour ouvrir le volet de notifications Android. Vous pourrez y voir l’avancée réelle du téléchargement de <strong>ClairVoyanceMedium.apk</strong>.</p>
+        </article>
 
-      <article class="step hidden" id="stepSamsung">
-        <div class="num">!</div><h2>Protection du téléphone</h2><p>Sur certains appareils Samsung Galaxy, le <strong>Bloqueur automatique</strong> peut empêcher l’installation d’un APK téléchargé hors des boutiques d’applications.</p><div class="hint"><strong>Sur Samsung uniquement :</strong> Paramètres → Sécurité et confidentialité → Bloqueur automatique → désactivez-le temporairement. Revenez ensuite ouvrir l’APK.</div><button class="btn green" type="button" id="samsungDoneBtn">J’ai effectué ce réglage</button>
-      </article>
+        <article class="step">
+          <div class="num">3</div>
+          <h3>Ouvrir le fichier</h3>
+          <p>Quand le téléchargement est terminé, touchez la notification <strong>ClairVoyanceMedium.apk</strong> ou le message <strong>« Ouvrir le fichier »</strong>.</p>
+        </article>
 
-      <article class="step" id="stepOpen"><div class="num">3</div><h2>Après l’installation</h2><p>Touchez <strong>Ouvrir</strong> si Android le propose. Sinon ouvrez la liste des applications et touchez l’icône <strong>ClairVoyanceMedium.com</strong>.</p><button class="btn green" type="button" id="installedBtn">L’application est installée</button></article>
-    </div>
-    <div class="success" id="successBox"><strong>Installation terminée</strong><p>L’icône ClairVoyanceMedium.com doit maintenant apparaître parmi vos applications. Au premier lancement, l’application pourra proposer l’activation des notifications.</p></div>
+        <article class="step">
+          <div class="num">4</div>
+          <h3>Installer</h3>
+          <p>Touchez <strong>Installer</strong>. Si Android indique que votre navigateur n’est pas autorisé, touchez <strong>Paramètres</strong>, activez <strong>« Autoriser depuis cette source »</strong>, puis revenez ouvrir le fichier APK.</p>
+        </article>
+
+        <article class="step warning" id="samsungHelp" hidden>
+          <div class="num">!</div>
+          <h3>Uniquement si un Samsung bloque l’installation</h3>
+          <p>Ouvrez <strong>Paramètres → Sécurité et confidentialité → Bloqueur automatique</strong> et désactivez-le temporairement, puis ouvrez de nouveau l’APK.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="guide" id="iosGuide">
+      <div class="download-box">
+        <h2>Installation iPhone / iPad</h2>
+        <p>Sur iPhone ou iPad, utilisez Safari puis ouvrez la page d’installation dédiée.</p>
+        <a class="download-btn" href="ios-app.html">Continuer sur iPhone / iPad</a>
+      </div>
+      <div class="steps">
+        <article class="step"><div class="num">1</div><h3>Ajouter à l’écran d’accueil</h3><p>Dans Safari, touchez <strong>Partager → Ajouter à l’écran d’accueil</strong>.</p></article>
+        <article class="step"><div class="num">2</div><h3>Ouvrir l’application</h3><p>Ouvrez ensuite l’icône ClairVoyanceMedium.com depuis l’écran d’accueil.</p></article>
+      </div>
+    </section>
+
+    <div class="platform" id="platform">Détection de votre appareil…</div>
+    <div class="footer">Site officiel : <a href="https://www.clairvoyancemedium.com/">www.clairvoyancemedium.com</a></div>
   </section>
+</main>
 
-  <section class="guide" id="iosGuide">
-    <div class="guide-head"><strong>Installation iPhone / iPad avec Web Push</strong><span>Cette version est conçue pour être ajoutée à l’écran d’accueil et recevoir ensuite des notifications push sur iOS/iPadOS 16.4+.</span></div>
-    <div class="steps">
-      <article class="step active"><div class="num">1</div><h2>Ouvrir l’installation iOS</h2><p>Utilisez Safari puis ouvrez notre page iPhone/iPad dédiée.</p><a class="btn primary" href="ios-app.html">Ouvrir l’installation iPhone / iPad</a></article>
-      <article class="step"><div class="num">2</div><h2>Ajouter à l’écran d’accueil</h2><p>Dans Safari : <strong>Partager → Ajouter à l’écran d’accueil</strong>, puis ouvrez l’icône ClairVoyanceMedium.com.</p></article>
-      <article class="step"><div class="num">3</div><h2>Activer les notifications</h2><p>Une fois l’application ouverte depuis son icône, touchez <strong>Activer les notifications</strong>.</p></article>
-    </div>
-  </section>
-
-  <div class="platform" id="platform">Détection de votre appareil…</div>
-  <a class="btn secondary web" href="https://www.clairvoyancemedium.com/">Ouvrir la version Web</a>
-  <div class="small">Site officiel : <a href="https://www.clairvoyancemedium.com/">www.clairvoyancemedium.com</a></div>
-  <div class="admin"><a href="admin.html">Administration : notifications et métriques</a></div>
-</section></main>
-
-<div class="toast" id="downloadToast" aria-live="polite" aria-atomic="true">
+<div class="toast" id="downloadToast" aria-live="polite">
   <div class="toast-card">
-    <p class="toast-title" id="toastTitle">Téléchargement en cours</p>
-    <div class="toast-row"><span class="spinner" aria-hidden="true"></span><p class="toast-text" id="toastText">Patientez pendant le téléchargement de ClairVoyanceMedium.apk.</p></div>
-    <div class="progress" aria-hidden="true"><span></span></div>
-    <div class="toast-meta"><span>ClairVoyanceMedium.apk · ~46 Mo</span><span id="elapsed">0 s</span></div>
-    <div class="toast-extra" id="toastExtra"><strong>Le téléchargement semble long ?</strong><br>Faites glisser votre doigt du haut de l’écran vers le bas pour ouvrir le <strong>volet de notifications Android</strong>. Vous pourrez y voir l’avancée du téléchargement. Quand il est terminé, touchez la notification <strong>ClairVoyanceMedium.apk</strong>.</div>
-    <div class="toast-actions">
-      <a class="btn secondary retry" id="retryDownload" href="https://github.com/ClairVoyanceMedium/app-clairvoyancemedium.github.io/releases/download/android-latest/ClairVoyanceMedium.apk">Relancer le téléchargement</a>
-      <button class="btn secondary toast-close" type="button" id="toastClose">Masquer</button>
+    <div class="toast-row">
+      <span class="spinner" aria-hidden="true"></span>
+      <div>
+        <p class="toast-title">Téléchargement lancé</p>
+        <p class="toast-text">Pour voir l’avancée réelle, faites glisser votre doigt du haut de l’écran vers le bas et regardez le volet de notifications Android.</p>
+        <span class="elapsed" id="elapsed">Temps écoulé : 0 s</span>
+      </div>
     </div>
   </div>
 </div>
@@ -99,83 +119,35 @@
   const android=/Android/i.test(ua);
   const ios=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   const samsung=android&&(/SamsungBrowser/i.test(ua)||/SM-[A-Z0-9]/i.test(ua));
-  const samsungBrowser=/SamsungBrowser/i.test(ua);
-  const chrome=/Chrome\//i.test(ua)&&!/SamsungBrowser|EdgA|OPR\//i.test(ua);
-  const edge=/EdgA/i.test(ua),firefox=/Firefox\//i.test(ua);
-  const $=id=>document.getElementById(id);
-  const on=(id,event,fn)=>{const el=$(id);if(el)el.addEventListener(event,fn)};
-  const androidGuide=$('androidGuide'),iosGuide=$('iosGuide'),platform=$('platform');
-  const stepDownload=$('stepDownload'),stepInstall=$('stepInstall'),stepSamsung=$('stepSamsung'),stepOpen=$('stepOpen'),successBox=$('successBox');
-  const toast=$('downloadToast'),toastTitle=$('toastTitle'),toastText=$('toastText'),elapsed=$('elapsed'),toastExtra=$('toastExtra'),retry=$('retryDownload');
-  let timer=null,lastClick=0;
+  const androidGuide=document.getElementById('androidGuide');
+  const iosGuide=document.getElementById('iosGuide');
+  const platform=document.getElementById('platform');
+  const toast=document.getElementById('downloadToast');
+  const elapsed=document.getElementById('elapsed');
+  const samsungHelp=document.getElementById('samsungHelp');
+  let timer=null;
 
-  function browserName(){if(samsungBrowser)return'Samsung Internet';if(chrome)return'Chrome';if(edge)return'Microsoft Edge';if(firefox)return'Firefox';return'votre navigateur'}
-  function allSteps(){return[stepDownload,stepInstall,stepSamsung,stepOpen].filter(Boolean)}
-  function activate(el){allSteps().forEach(x=>x.classList.remove('active'));if(el&&!el.classList.contains('hidden'))el.classList.add('active')}
-  function done(el){if(el)el.classList.add('done')}
-  function stopTimer(){if(timer){clearInterval(timer);timer=null}}
-  function hideToast(){if(toast)toast.classList.remove('show')}
-  function showToast(){if(toast)toast.classList.add('show')}
-
-  function updateWait(){
-    const started=Number(sessionStorage.getItem('cvm_download_started_at')||0);
-    if(!started){stopTimer();return}
-    const sec=Math.max(0,Math.floor((Date.now()-started)/1000));
-    if(elapsed)elapsed.textContent=sec<60?sec+' s':Math.floor(sec/60)+' min '+String(sec%60).padStart(2,'0')+' s';
-    if(sec>=5&&toastExtra)toastExtra.classList.add('show');
-    if(sec>=45&&retry)retry.classList.add('show');
-    if(sec>=90&&toastTitle)toastTitle.textContent='Téléchargement toujours en cours';
-  }
-  function startTimer(){stopTimer();updateWait();timer=setInterval(updateWait,1000)}
-
-  function downloadStarted(){
-    const now=Date.now();if(now-lastClick<700)return;lastClick=now;
-    done(stepDownload);activate(stepInstall);
-    try{sessionStorage.setItem('cvm_download_started_at',String(now))}catch(e){}
-    if(toastTitle)toastTitle.textContent='Téléchargement en cours';
-    if(toastText)toastText.innerHTML='<strong>'+browserName()+'</strong> télécharge ClairVoyanceMedium.apk. Pour suivre l’avancée, ouvrez le volet de notifications Android.';
-    if(toastExtra)toastExtra.classList.remove('show');if(retry)retry.classList.remove('show');
-    showToast();startTimer();
-  }
-
-  function restoreDownload(){
-    let started=0;try{started=Number(sessionStorage.getItem('cvm_download_started_at')||0)}catch(e){}
-    if(!started)return;
-    if(Date.now()-started>10*60*1000){try{sessionStorage.removeItem('cvm_download_started_at')}catch(e){};return}
-    done(stepDownload);activate(stepInstall);
-    if(toastText)toastText.innerHTML='Le téléchargement a été lancé dans <strong>'+browserName()+'</strong>. Faites glisser du haut vers le bas pour voir sa progression dans le volet de notifications.';
-    showToast();startTimer();
-  }
-
-  function blocked(){
-    stopTimer();hideToast();try{sessionStorage.removeItem('cvm_download_started_at')}catch(e){}
-    if(samsung&&stepSamsung){stepSamsung.classList.remove('hidden');activate(stepSamsung);stepSamsung.scrollIntoView({behavior:'smooth',block:'center'})}
-    else{activate(stepInstall);alert('Android doit autoriser '+browserName()+' à installer cette application. Dans le message Android, touchez « Paramètres », activez « Autoriser depuis cette source », puis ouvrez de nouveau ClairVoyanceMedium.apk.')}
-  }
-  function samsungReady(){activate(stepInstall);done(stepSamsung);alert('Réglage effectué. Ouvrez maintenant le volet de notifications Android et touchez ClairVoyanceMedium.apk lorsqu’il est prêt.')}
-  function installed(){
-    stopTimer();hideToast();try{sessionStorage.removeItem('cvm_download_started_at')}catch(e){}
-    done(stepInstall);done(stepOpen);activate(null);if(successBox)successBox.classList.add('show');
-    try{localStorage.setItem('cvm_installed_seen','1')}catch(e){}
-    if(successBox)successBox.scrollIntoView({behavior:'smooth',block:'center'});
+  function showDownloadInfo(){
+    const started=Date.now();
+    try{sessionStorage.setItem('cvm_download_started_at',String(started))}catch(e){}
+    toast.classList.add('show');
+    if(timer)clearInterval(timer);
+    timer=setInterval(function(){
+      const sec=Math.floor((Date.now()-started)/1000);
+      elapsed.textContent='Temps écoulé : '+(sec<60?sec+' s':Math.floor(sec/60)+' min '+String(sec%60).padStart(2,'0')+' s');
+    },1000);
   }
 
   if(android){
-    if(androidGuide)androidGuide.classList.add('show');
-    if(platform)platform.textContent='Android détecté · '+browserName()+' · installation APK guidée.';
-    on('downloadBtn','click',downloadStarted);on('retryDownload','click',downloadStarted);on('blockedBtn','click',blocked);on('samsungDoneBtn','click',samsungReady);on('installedBtn','click',installed);on('toastClose','click',hideToast);
-    if(stepDownload){
-      stepDownload.addEventListener('click',function(e){if(e.target.closest('a,button'))return;const a=$('downloadBtn');if(a)a.click()});
-      stepDownload.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();const a=$('downloadBtn');if(a)a.click()}});
-    }
-    restoreDownload();
-    try{if(localStorage.getItem('cvm_installed_seen')==='1'&&successBox)successBox.classList.add('show')}catch(e){}
-    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')restoreDownload()});
-    window.addEventListener('pageshow',restoreDownload);
+    androidGuide.classList.add('show');
+    platform.textContent='Android détecté · installation APK';
+    if(samsung&&samsungHelp)samsungHelp.hidden=false;
+    document.getElementById('downloadBtn').addEventListener('click',showDownloadInfo);
   }else if(ios){
-    if(iosGuide)iosGuide.classList.add('show');if(platform)platform.textContent='iPhone / iPad détecté · installation Web Push disponible.';
+    iosGuide.classList.add('show');
+    platform.textContent='iPhone / iPad détecté';
   }else{
-    if(platform)platform.textContent='Ouvrez cette page depuis Android, iPhone ou iPad pour afficher le parcours correspondant.';
+    platform.textContent='Ouvrez cette page depuis Android, iPhone ou iPad.';
   }
 })();
 </script>
