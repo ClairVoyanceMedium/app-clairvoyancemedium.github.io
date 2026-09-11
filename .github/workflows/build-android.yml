@@ -150,14 +150,11 @@ jobs:
 
       - name: Build universal release APK
         working-directory: .build_app
-        env:
-          ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
         shell: bash
         run: |
           flutter build apk --release \
-            --build-name=0.2.1 \
-            --build-number=${{ github.run_number }} \
-            --dart-define=ONESIGNAL_APP_ID="$ONESIGNAL_APP_ID"
+            --build-name=0.2.2 \
+            --build-number=${{ github.run_number }}
 
       - name: Prepare downloadable APK
         run: cp .build_app/build/app/outputs/flutter-apk/app-release.apk ClairVoyanceMedium.apk
@@ -175,7 +172,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          NOTES='Version Android 0.2.1 reliée au projet Firebase ClairVoyanceMedium, avec logo officiel, WebView du site en temps réel et structure OneSignal. Les notifications deviennent actives dès que ONESIGNAL_APP_ID et la configuration OneSignal/FCM sont terminés.'
+          NOTES='Version Android 0.2.2 reliée à Firebase et à l’App ID OneSignal ClairVoyanceMedium, avec demande d’autorisation push, métriques, logo officiel et WebView du site en temps réel.'
           if gh release view android-latest >/dev/null 2>&1; then
             gh release upload android-latest ClairVoyanceMedium.apk --clobber
             gh release edit android-latest --title 'ClairVoyanceMedium Android' --notes "$NOTES" --latest
