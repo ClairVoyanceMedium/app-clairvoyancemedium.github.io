@@ -34,7 +34,7 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Create Android project
+      - name: Create Android project and decode official icon
         shell: bash
         run: |
           rm -rf .build_app
@@ -42,9 +42,22 @@ jobs:
           cp pubspec.yaml .build_app/pubspec.yaml
           rm -rf .build_app/lib .build_app/test
           cp -R lib .build_app/lib
-
           mkdir -p .build_app/assets
-          base64 --decode assets/app_icon_512.png.b64 > .build_app/assets/app_icon.png
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, re
+
+          src = Path('assets/app_icon_512.png.b64').read_text(encoding='utf-8')
+          clean = re.sub(r'[^A-Za-z0-9+/=]', '', src)
+          clean = clean.rstrip('=')
+          clean += '=' * (-len(clean) % 4)
+          raw = base64.b64decode(clean, validate=False)
+          if not raw.startswith(b'\x89PNG\r\n\x1a\n'):
+              raise SystemExit('Le fichier du logo decode ne correspond pas a un PNG valide')
+          Path('.build_app/assets/app_icon.png').write_bytes(raw)
+          print(f'Logo officiel decode: {len(raw)} octets')
+          PY
 
           python3 - <<'PY'
           from pathlib import Path
@@ -63,7 +76,6 @@ jobs:
               'android:label="clairvoyancemedium_app"',
               'android:label="ClairVoyanceMedium.com"',
           )
-
           manifest.write_text(text, encoding='utf-8')
           PY
 
@@ -88,13 +100,16 @@ jobs:
           EOF
           dart run flutter_launcher_icons
 
+          echo 'Generated Android launcher icons:'
+          find android/app/src/main/res -type f -name 'ic_launcher*' -print
+
       - name: Check Dart code
         working-directory: .build_app
         run: flutter analyze lib --no-fatal-warnings --no-fatal-infos
 
       - name: Build universal release APK
         working-directory: .build_app
-        run: flutter build apk --release --build-name=0.1.0 --build-number=${{ github.run_number }}
+        run: flutter build apk --release --build-name=0.1.1 --build-number=${{ github.run_number }}
 
       - name: Prepare downloadable APK
         run: cp .build_app/build/app/outputs/flutter-apk/app-release.apk ClairVoyanceMedium.apk
@@ -116,11 +131,11 @@ jobs:
             gh release upload android-latest ClairVoyanceMedium.apk --clobber
             gh release edit android-latest \
               --title 'ClairVoyanceMedium Android' \
-              --notes 'Dernière version Android téléchargeable directement avec le logo officiel. Le contenu de l’application charge https://www.clairvoyancemedium.com/ en temps réel.' \
+              --notes 'Version Android 0.1.1 avec le logo officiel noir et or Frederick. Le contenu de l’application charge https://www.clairvoyancemedium.com/ en temps réel.' \
               --latest
           else
             gh release create android-latest ClairVoyanceMedium.apk \
               --title 'ClairVoyanceMedium Android' \
-              --notes 'Dernière version Android téléchargeable directement avec le logo officiel. Le contenu de l’application charge https://www.clairvoyancemedium.com/ en temps réel.' \
+              --notes 'Version Android 0.1.1 avec le logo officiel noir et or Frederick. Le contenu de l’application charge https://www.clairvoyancemedium.com/ en temps réel.' \
               --latest
           fi
