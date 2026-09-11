@@ -8,7 +8,7 @@
   <meta name="description" content="Application officielle ClairVoyanceMedium.com pour Android, iPhone et tablettes.">
   <style>
     :root{--bg:#070707;--gold:#d7ad4a;--gold2:#f3d987;--text:#f5f2ea;--muted:#aaa49a;--line:#332b1c;--green:#66d69a}
-    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}body{background:radial-gradient(circle at 50% -10%,rgba(215,173,74,.18),transparent 36%),#070707}.wrap{min-height:100dvh;display:grid;place-items:center;padding:28px}.card{width:min(760px,100%);border:1px solid var(--line);border-radius:26px;background:linear-gradient(180deg,#151515,#0b0b0b);box-shadow:0 24px 70px rgba(0,0,0,.45);padding:34px;text-align:center}.logo{width:92px;height:92px;border-radius:24px;margin:0 auto 20px;display:grid;place-items:center;border:1px solid #725b27;background:linear-gradient(145deg,#0b0b0b,#251d0c);color:var(--gold2);font-weight:800;font-size:25px}.eyebrow{color:var(--gold2);font-size:13px;text-transform:uppercase;letter-spacing:1.8px}.card h1{font-size:clamp(28px,6vw,48px);margin:10px 0 12px}.lead{color:var(--muted);line-height:1.6;max-width:620px;margin:0 auto 24px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}.btn{display:flex;align-items:center;justify-content:center;min-height:54px;padding:13px 18px;border-radius:14px;text-decoration:none;font-weight:750;border:1px solid #5d4a22;background:#15120b;color:var(--gold2);cursor:pointer}.btn.primary{background:linear-gradient(135deg,#e2bb5c,#a77b1f);border-color:#dbb354;color:#0b0905}.btn.secondary{background:#101010}.status,.install{margin-top:14px;padding:14px 16px;border:1px solid #2d291f;border-radius:14px;background:#0a0a0a;color:var(--muted);font-size:13px;line-height:1.55}.platform{margin-top:16px;color:var(--green);font-size:12px}.small{margin-top:24px;color:#716d65;font-size:11px}.small a{color:#bfa86d}.prep{display:none;margin:18px 0 8px;text-align:left;border:1px solid #765d2b;border-radius:18px;background:linear-gradient(180deg,#18140c,#0d0d0d);padding:18px}.prep.show{display:block}.prep h2{font-size:19px;color:var(--gold2);margin:0 0 8px}.prep p{font-size:13px;line-height:1.55;color:#d2cec5;margin:7px 0}.steps{margin:12px 0 14px;padding-left:22px;color:#d2cec5;font-size:13px;line-height:1.7}.step-ok{display:none;margin-top:14px;padding:14px;border-radius:14px;border:1px solid #315942;background:#0d1711}.step-ok.show{display:block}.step-ok strong{color:#86e1a9}.hidden{display:none!important}.sheet{position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:10000;transform:translateY(130%);opacity:0;transition:.28s ease;pointer-events:none}.sheet.show{transform:translateY(0);opacity:1;pointer-events:auto}.sheet-card{max-width:620px;margin:0 auto;border:1px solid #8d6a24;border-radius:20px;background:linear-gradient(180deg,#181818,#0b0b0b);box-shadow:0 18px 60px rgba(0,0,0,.72);padding:18px}.sheet-title{font-size:17px;font-weight:800;color:var(--gold2);margin:0 0 6px}.sheet-text{font-size:13px;line-height:1.55;color:#d0cbc1;margin:0}.sheet-note{margin-top:10px;padding:11px 12px;border-radius:12px;background:#211b0d;border:1px solid #5d4920;color:#f1ddb0;font-size:12px;line-height:1.55}.sheet-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}.sheet-close{margin-top:8px;width:100%;border:0;background:transparent;color:#847e74;padding:8px;cursor:pointer}@media(max-width:600px){.card{padding:26px 18px;border-radius:20px}.actions{grid-template-columns:1fr}.logo{width:78px;height:78px}.prep .btn{width:100%}}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}body{background:radial-gradient(circle at 50% -10%,rgba(215,173,74,.18),transparent 36%),#070707}.wrap{min-height:100dvh;display:grid;place-items:center;padding:28px}.card{width:min(760px,100%);border:1px solid var(--line);border-radius:26px;background:linear-gradient(180deg,#151515,#0b0b0b);box-shadow:0 24px 70px rgba(0,0,0,.45);padding:34px;text-align:center}.logo{width:92px;height:92px;border-radius:24px;margin:0 auto 20px;display:grid;place-items:center;border:1px solid #725b27;background:linear-gradient(145deg,#0b0b0b,#251d0c);color:var(--gold2);font-weight:800;font-size:25px}.eyebrow{color:var(--gold2);font-size:13px;text-transform:uppercase;letter-spacing:1.8px}.card h1{font-size:clamp(28px,6vw,48px);margin:10px 0 12px}.lead{color:var(--muted);line-height:1.6;max-width:620px;margin:0 auto 24px}.btn{display:flex;align-items:center;justify-content:center;min-height:54px;padding:13px 18px;border-radius:14px;text-decoration:none;font-weight:750;border:1px solid #5d4a22;background:#15120b;color:var(--gold2);cursor:pointer;width:100%}.btn.primary{background:linear-gradient(135deg,#e2bb5c,#a77b1f);border-color:#dbb354;color:#0b0905}.btn.secondary{background:#101010}.status,.install{margin-top:14px;padding:14px 16px;border:1px solid #2d291f;border-radius:14px;background:#0a0a0a;color:var(--muted);font-size:13px;line-height:1.55}.platform{margin-top:16px;color:var(--green);font-size:12px}.small{margin-top:24px;color:#716d65;font-size:11px}.small a{color:#bfa86d}.prep{display:none;margin:18px 0 8px;text-align:left;border:1px solid #765d2b;border-radius:18px;background:linear-gradient(180deg,#18140c,#0d0d0d);padding:18px}.prep.show{display:block}.prep h2{font-size:19px;color:var(--gold2);margin:0 0 8px}.prep p{font-size:13px;line-height:1.55;color:#d2cec5;margin:7px 0}.steps{margin:12px 0 14px;padding-left:22px;color:#d2cec5;font-size:13px;line-height:1.7}.step-ok{display:none;margin-top:14px;padding:14px;border-radius:14px;border:1px solid #315942;background:#0d1711}.step-ok.show{display:block}.step-ok strong{color:#86e1a9}.hidden{display:none!important}.sheet{position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:10000;transform:translateY(130%);opacity:0;transition:.28s ease;pointer-events:none}.sheet.show{transform:translateY(0);opacity:1;pointer-events:auto}.sheet-card{max-width:620px;margin:0 auto;border:1px solid #8d6a24;border-radius:20px;background:linear-gradient(180deg,#181818,#0b0b0b);box-shadow:0 18px 60px rgba(0,0,0,.72);padding:18px}.sheet-title{font-size:17px;font-weight:800;color:var(--gold2);margin:0 0 6px}.sheet-text{font-size:13px;line-height:1.55;color:#d0cbc1;margin:0}.sheet-note{margin-top:10px;padding:11px 12px;border-radius:12px;background:#211b0d;border:1px solid #5d4920;color:#f1ddb0;font-size:12px;line-height:1.55}.sheet-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}.sheet-close{margin-top:8px;width:100%;border:0;background:transparent;color:#847e74;padding:8px;cursor:pointer}@media(max-width:600px){.card{padding:26px 18px;border-radius:20px}.logo{width:78px;height:78px}}
   </style>
 </head>
 <body>
@@ -16,38 +16,41 @@
   <div class="logo">CV</div><div class="eyebrow">Application officielle</div><h1>ClairVoyanceMedium.com</h1>
   <p class="lead">L’application affiche directement <strong>www.clairvoyancemedium.com</strong>. Le contenu du site reste à jour automatiquement.</p>
 
-  <section class="prep" id="samsungPrep">
-    <h2>Samsung détecté — préparez l’installation</h2>
-    <p>Certains Samsung peuvent bloquer les APK avec le <strong>Bloqueur automatique</strong>. Vous pouvez le désactiver temporairement avant le téléchargement.</p>
+  <section class="prep" id="androidPrep">
+    <h2>Préparer l’installation Android</h2>
+    <p>Android demande une autorisation différente pour chaque navigateur. Par exemple, une autorisation donnée à Samsung Internet ne vaut pas automatiquement pour Chrome.</p>
     <ol class="steps">
-      <li>Touchez <strong>Ouvrir les paramètres Samsung</strong>.</li>
-      <li>Ouvrez <strong>Sécurité et confidentialité &gt; Bloqueur automatique</strong>.</li>
-      <li>Désactivez-le temporairement puis revenez ici.</li>
+      <li>Touchez <strong>1. Autoriser ce navigateur</strong>.</li>
+      <li>Activez <strong>Autoriser depuis cette source</strong>.</li>
+      <li>Revenez sur cette page.</li>
+      <li>Sur Samsung uniquement, si <strong>Bloqueur automatique</strong> est actif, désactivez-le temporairement.</li>
+      <li>Touchez ensuite <strong>2. Télécharger et installer</strong>.</li>
     </ol>
-    <button class="btn primary" type="button" id="samsungSecurityBtn">Ouvrir les paramètres Samsung</button>
-    <div class="step-ok" id="samsungReturn"><strong>Vous êtes revenu sur la page.</strong><p>Vous pouvez maintenant télécharger l’application.</p></div>
+    <button class="btn primary" type="button" id="allowBrowserBtn">1. Autoriser ce navigateur</button>
+    <button class="btn secondary hidden" type="button" id="samsungSecurityBtn" style="margin-top:10px">Samsung : régler Bloqueur automatique</button>
+    <div class="step-ok" id="returnBox">
+      <strong>Vous êtes revenu sur la page.</strong>
+      <p>Si vous avez activé « Autoriser depuis cette source », vous pouvez maintenant télécharger l’application.</p>
+      <a class="btn primary" href="https://github.com/ClairVoyanceMedium/app-clairvoyancemedium.github.io/releases/download/android-latest/ClairVoyanceMedium.apk" id="downloadBtn">2. Télécharger et installer</a>
+    </div>
   </section>
 
-  <div class="actions" id="normalActions">
-    <a class="btn primary" href="https://github.com/ClairVoyanceMedium/app-clairvoyancemedium.github.io/releases/download/android-latest/ClairVoyanceMedium.apk" id="downloadBtn">Télécharger l’application Android</a>
-    <a class="btn secondary" href="https://www.clairvoyancemedium.com/">Ouvrir la version Web</a>
-  </div>
+  <a class="btn secondary" href="https://www.clairvoyancemedium.com/" style="margin-top:14px">Ouvrir la version Web</a>
   <div class="platform" id="platform">Détection de votre appareil…</div>
-  <div class="status" id="status">Après installation, une icône ClairVoyanceMedium.com apparaît parmi vos applications.</div>
-  <div class="install" id="installHelp"><strong>Android :</strong> après le téléchargement, ouvrez <strong>ClairVoyanceMedium.apk</strong> puis touchez <strong>Installer</strong>. Si votre téléphone bloque les sources inconnues, revenez sur cette page : l’aide réapparaîtra automatiquement.</div>
+  <div class="status" id="status">Après une installation réussie, ClairVoyanceMedium.com apparaît dans la liste de vos applications. Selon le lanceur Android, l’icône n’est pas toujours ajoutée automatiquement à l’écran d’accueil.</div>
+  <div class="install" id="installHelp"><strong>Android :</strong> si l’installation est terminée mais que vous ne voyez pas l’icône sur l’écran d’accueil, ouvrez la liste des applications et recherchez <strong>ClairVoyanceMedium.com</strong>.</div>
   <div class="small">Site officiel : <a href="https://www.clairvoyancemedium.com/">www.clairvoyancemedium.com</a></div>
 </section></main>
 
 <div class="sheet" id="installSheet" aria-live="assertive">
   <div class="sheet-card">
-    <p class="sheet-title" id="sheetTitle">Téléchargement lancé</p>
-    <p class="sheet-text" id="sheetText">Quand le téléchargement est terminé, touchez <strong>Ouvrir</strong>. Android affichera ensuite le bouton officiel <strong>Installer</strong>.</p>
-    <div class="sheet-note" id="blockedNote"><strong>Si votre téléphone affiche « source inconnue », « application inconnue bloquée » ou refuse l’installation :</strong><br>1. Touchez <strong>OK</strong> ou <strong>Paramètres</strong>.<br>2. Autorisez l’installation d’applications depuis le navigateur ou le gestionnaire de fichiers utilisé.<br>3. Revenez dans <strong>Téléchargements</strong> et ouvrez de nouveau <strong>ClairVoyanceMedium.apk</strong>.</div>
-    <div class="sheet-note hidden" id="samsungNote"><strong>Samsung :</strong> si le message vient du <strong>Bloqueur automatique</strong>, désactivez-le temporairement dans <strong>Sécurité et confidentialité &gt; Bloqueur automatique</strong>, puis relancez l’APK.</div>
+    <p class="sheet-title" id="sheetTitle">Installation</p>
+    <p class="sheet-text" id="sheetText">Quand le téléchargement est terminé, touchez <strong>Ouvrir</strong> puis <strong>Installer</strong>.</p>
+    <div class="sheet-note"><strong>Si Android bloque encore :</strong> revenez ici et retouchez <strong>Autoriser ce navigateur</strong>. L’autorisation est propre au navigateur utilisé.</div>
     <div class="sheet-actions">
-      <button class="btn primary" type="button" id="installSettingsBtn">Ouvrir les paramètres d’installation</button>
-      <button class="btn secondary hidden" type="button" id="sheetSamsungBtn">Ouvrir les paramètres Samsung</button>
-      <a class="btn secondary" id="retryApk" href="https://github.com/ClairVoyanceMedium/app-clairvoyancemedium.github.io/releases/download/android-latest/ClairVoyanceMedium.apk">Retélécharger l’APK</a>
+      <button class="btn primary" type="button" id="sheetAllowBtn">Autoriser ce navigateur</button>
+      <button class="btn secondary hidden" type="button" id="sheetSamsungBtn">Samsung : Bloqueur automatique</button>
+      <a class="btn secondary" href="https://github.com/ClairVoyanceMedium/app-clairvoyancemedium.github.io/releases/download/android-latest/ClairVoyanceMedium.apk">Retélécharger l’APK</a>
     </div>
     <button class="sheet-close" type="button" id="sheetClose">Fermer</button>
   </div>
@@ -59,23 +62,20 @@
   const android=/Android/i.test(ua);
   const ios=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   const samsung=android&&(/SamsungBrowser/i.test(ua)||/SM-[A-Z0-9]/i.test(ua));
+  const samsungBrowser=/SamsungBrowser/i.test(ua);
   const chrome=/Chrome\//i.test(ua)&&!/SamsungBrowser|EdgA|OPR\//i.test(ua);
   const edge=/EdgA/i.test(ua);
   const firefox=/Firefox\//i.test(ua);
-  const samsungBrowser=/SamsungBrowser/i.test(ua);
-  const prep=document.getElementById('samsungPrep');
-  const securityBtn=document.getElementById('samsungSecurityBtn');
-  const returnBox=document.getElementById('samsungReturn');
-  const download=document.getElementById('downloadBtn');
+  const prep=document.getElementById('androidPrep');
+  const allowBrowserBtn=document.getElementById('allowBrowserBtn');
+  const samsungSecurityBtn=document.getElementById('samsungSecurityBtn');
+  const returnBox=document.getElementById('returnBox');
+  const downloadBtn=document.getElementById('downloadBtn');
   const platform=document.getElementById('platform');
-  const help=document.getElementById('installHelp');
   const sheet=document.getElementById('installSheet');
-  const sheetTitle=document.getElementById('sheetTitle');
-  const sheetText=document.getElementById('sheetText');
-  const samsungNote=document.getElementById('samsungNote');
-  const installSettingsBtn=document.getElementById('installSettingsBtn');
+  const sheetAllowBtn=document.getElementById('sheetAllowBtn');
   const sheetSamsungBtn=document.getElementById('sheetSamsungBtn');
-  let openedSettings=false;
+  let settingsOpened=false;
 
   function browserPackage(){
     if(samsungBrowser) return 'com.sec.android.app.sbrowser';
@@ -86,68 +86,56 @@
   }
 
   function openInstallSettings(){
+    settingsOpened=true;
+    sessionStorage.setItem('cvmInstallSettingsOpened','1');
     const pkg=browserPackage();
     if(pkg){
-      location.href='intent:package:'+pkg+'#Intent;action=android.settings.MANAGE_UNKNOWN_APP_SOURCES;end';
+      location.href='intent:#Intent;action=android.settings.MANAGE_UNKNOWN_APP_SOURCES;data=package%3A'+pkg+';end';
     }else{
       location.href='intent:#Intent;action=android.settings.MANAGE_UNKNOWN_APP_SOURCES;end';
-      setTimeout(function(){location.href='intent:#Intent;action=android.settings.SECURITY_SETTINGS;end';},900);
     }
   }
 
   function openSamsungSecurity(){
-    openedSettings=true;
-    sessionStorage.setItem('cvmSamsungSettingsOpened','1');
+    settingsOpened=true;
     location.href='intent:#Intent;action=android.settings.SECURITY_SETTINGS;end';
   }
 
-  function showInstallHelp(recovery){
+  function showReturn(){
     if(!android) return;
+    if(settingsOpened||sessionStorage.getItem('cvmInstallSettingsOpened')==='1') returnBox.classList.add('show');
+  }
+
+  function showInstallSheet(){
     sessionStorage.setItem('cvmInstallStarted','1');
-    sheetTitle.textContent=recovery?'Installation bloquée ? Voici la suite':'Téléchargement lancé';
-    sheetText.innerHTML=recovery
-      ?'Si vous venez de fermer un message de sécurité Android, <strong>vous n’êtes pas bloqué</strong> : utilisez le bouton ci-dessous pour ouvrir directement les paramètres d’installation, puis revenez ouvrir l’APK.'
-      :'Quand le téléchargement est terminé, touchez <strong>Ouvrir</strong>. Si Android demande une autorisation pour les sources inconnues, utilisez le bouton ci-dessous.';
-    if(samsung){samsungNote.classList.remove('hidden');sheetSamsungBtn.classList.remove('hidden');}
     sheet.classList.add('show');
   }
 
   if(android){
-    platform.textContent='Appareil Android détecté — installation guidée.';
-    download.textContent='Télécharger et installer ClairVoyanceMedium';
-    download.addEventListener('click',function(){showInstallHelp(false);});
-    installSettingsBtn.addEventListener('click',openInstallSettings);
-
+    prep.classList.add('show');
+    platform.textContent='Android détecté — installation guidée pour ce navigateur.';
+    allowBrowserBtn.addEventListener('click',openInstallSettings);
+    sheetAllowBtn.addEventListener('click',openInstallSettings);
     if(samsung){
-      prep.classList.add('show');
-      samsungNote.classList.remove('hidden');
+      samsungSecurityBtn.classList.remove('hidden');
       sheetSamsungBtn.classList.remove('hidden');
-      securityBtn.addEventListener('click',openSamsungSecurity);
+      samsungSecurityBtn.addEventListener('click',openSamsungSecurity);
       sheetSamsungBtn.addEventListener('click',openSamsungSecurity);
-      if(sessionStorage.getItem('cvmSamsungSettingsOpened')==='1') returnBox.classList.add('show');
-    }else{
-      sheetSamsungBtn.classList.add('hidden');
     }
-
-    if(sessionStorage.getItem('cvmInstallStarted')==='1') setTimeout(function(){showInstallHelp(true);},650);
-    document.addEventListener('visibilitychange',function(){
-      if(document.visibilityState==='visible'){
-        if(openedSettings||sessionStorage.getItem('cvmSamsungSettingsOpened')==='1') returnBox.classList.add('show');
-        if(sessionStorage.getItem('cvmInstallStarted')==='1') showInstallHelp(true);
-      }
-    });
-    window.addEventListener('focus',function(){
-      if(openedSettings||sessionStorage.getItem('cvmSamsungSettingsOpened')==='1') returnBox.classList.add('show');
-      if(sessionStorage.getItem('cvmInstallStarted')==='1') showInstallHelp(true);
-    });
+    if(sessionStorage.getItem('cvmInstallSettingsOpened')==='1') returnBox.classList.add('show');
+    downloadBtn.addEventListener('click',showInstallSheet);
+    document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')showReturn();});
+    window.addEventListener('focus',showReturn);
+    if(sessionStorage.getItem('cvmInstallStarted')==='1') setTimeout(function(){sheet.classList.add('show');},700);
   }else if(ios){
-    platform.textContent='Appareil détecté : iPhone / iPad.';
-    download.textContent='Version Android (.APK)';
-    document.getElementById('status').textContent='La version Apple utilisera son propre parcours d’installation.';
-    help.innerHTML='<strong>iPhone / iPad :</strong> un fichier APK Android ne peut pas être installé.';
+    platform.textContent='iPhone / iPad détecté — la version Apple utilisera son propre parcours d’installation.';
+    prep.classList.add('hidden');
+    document.getElementById('status').textContent='La version Android APK ne peut pas être installée sur iPhone ou iPad.';
   }else{
-    platform.textContent='Version Android disponible. Les autres plateformes seront ajoutées sur cette même page.';
+    platform.textContent='La version Android est disponible. Les autres plateformes seront ajoutées progressivement.';
+    prep.classList.add('hidden');
   }
+
   document.getElementById('sheetClose').addEventListener('click',function(){sheet.classList.remove('show');});
 })();
 </script>
