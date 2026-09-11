@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <dict>
+      <key>FullScreen</key>
+      <true/>
+      <key>IgnoreManifestScope</key>
+      <true/>
+      <key>IsRemovable</key>
+      <true/>
+      <key>Label</key>
+      <string>ClairVoyanceMedium.com</string>
+      <key>Precomposed</key>
+      <true/>
+      <key>URL</key>
+      <string>https://www.clairvoyancemedium.com/</string>
+      <key>Icon</key>
+      <data>
+iVBORw0KGgoAAAANSUhEUgAAA...TRUNCATED_FOR_BREVITY...
+      </data>
+      <key>PayloadDisplayName</key>
+      <string>ClairVoyanceMedium.com</string>
+      <key>PayloadDescription</key>
+      <string>Ajoute ClairVoyanceMedium.com à l’écran d’accueil en mode plein écran.</string>
+      <key>PayloadIdentifier</key>
+      <string>com.clairvoyancemedium.webclip</string>
+      <key>PayloadType</key>
+      <string>com.apple.webClip.managed</string>
+      <key>PayloadUUID</key>
+      <string>95F1B2C6-5F8B-4A1E-9D69-8E19D681AF35</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+    </dict>
+  </array>
+  <key>PayloadDisplayName</key>
+  <string>ClairVoyanceMedium.com</string>
+  <key>PayloadDescription</key>
+  <string>Installe l’icône ClairVoyanceMedium.com sur iPhone ou iPad sans compte développeur.</string>
+  <key>PayloadIdentifier</key>
+  <string>com.clairvoyancemedium.profile.webclip</string>
+  <key>PayloadOrganization</key>
+  <string>ClairVoyanceMedium.com</string>
+  <key>PayloadType</key>
+  <string>Configuration</string>
+  <key>PayloadUUID</key>
+  <string>6A5EAA4D-EC0D-4945-B56B-E9239DB63AA5</string>
+  <key>PayloadVersion</key>
+  <integer>1</integer>
+</dict>
+</plist>
