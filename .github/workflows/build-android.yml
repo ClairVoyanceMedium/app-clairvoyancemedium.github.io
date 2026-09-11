@@ -10,6 +10,7 @@ on:
       - 'pubspec.yaml'
       - 'assets/**'
       - 'firebase/**'
+      - 'scripts/**'
       - '.github/workflows/build-android.yml'
 
 permissions:
@@ -20,10 +21,18 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ONESIGNAL_DISABLE_LOCATION: 'true'
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Require permanent signing secrets
+        shell: bash
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64" || { echo "::error::ANDROID_KEYSTORE_BASE64 manquant"; exit 1; }
+          test -n "$ANDROID_KEYSTORE_PASSWORD" || { echo "::error::ANDROID_KEYSTORE_PASSWORD manquant"; exit 1; }
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -51,76 +60,56 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import base64, json, re
-
           src = Path('assets/app_icon_512.png.b64').read_text(encoding='utf-8')
-          clean = re.sub(r'[^A-Za-z0-9+/=]', '', src)
-          clean = clean.rstrip('=')
+          clean = re.sub(r'[^A-Za-z0-9+/=]', '', src).rstrip('=')
           clean += '=' * (-len(clean) % 4)
           raw = base64.b64decode(clean, validate=False)
           if not raw.startswith(b'\xff\xd8\xff'):
-              raise SystemExit('Le fichier du logo decode ne correspond pas a un JPEG valide')
+              raise SystemExit('Logo officiel invalide')
           Path('.build_app/assets/app_icon.jpg').write_bytes(raw)
-
           cfg = json.loads(Path('.build_app/android/app/google-services.json').read_text(encoding='utf-8'))
           package_name = cfg['client'][0]['client_info']['android_client_info']['package_name']
-          expected = 'com.clairvoyancemedium.clairvoyancemedium_app'
-          if package_name != expected:
-              raise SystemExit(f'Package Firebase inattendu: {package_name} != {expected}')
-          print(f'Firebase Android valide pour {package_name}')
+          if package_name != 'com.clairvoyancemedium.clairvoyancemedium_app':
+              raise SystemExit('Package Firebase inattendu: ' + package_name)
           PY
 
           python3 - <<'PY'
           from pathlib import Path
-
           manifest = Path('.build_app/android/app/src/main/AndroidManifest.xml')
           text = manifest.read_text(encoding='utf-8')
-
           if 'android.permission.INTERNET' not in text:
-              text = text.replace(
-                  '<application',
-                  '<uses-permission android:name="android.permission.INTERNET" />\n    <application',
-                  1,
-              )
-
-          text = text.replace(
-              'android:label="clairvoyancemedium_app"',
-              'android:label="ClairVoyanceMedium.com"',
-          )
+              text = text.replace('<application', '<uses-permission android:name="android.permission.INTERNET" />\n    <application', 1)
+          text = text.replace('android:label="clairvoyancemedium_app"', 'android:label="ClairVoyanceMedium.com"')
           manifest.write_text(text, encoding='utf-8')
 
-          settings_kts = Path('.build_app/android/settings.gradle.kts')
-          settings_groovy = Path('.build_app/android/settings.gradle')
-          app_kts = Path('.build_app/android/app/build.gradle.kts')
-          app_groovy = Path('.build_app/android/app/build.gradle')
-
-          if settings_kts.exists():
-              s = settings_kts.read_text(encoding='utf-8')
+          settings = Path('.build_app/android/settings.gradle.kts')
+          app = Path('.build_app/android/app/build.gradle.kts')
+          if settings.exists():
+              s = settings.read_text(encoding='utf-8')
               marker = 'id("com.android.application")'
               if 'com.google.gms.google-services' not in s:
                   s = s.replace(marker, 'id("com.google.gms.google-services") version "4.4.4" apply false\n    ' + marker, 1)
-              settings_kts.write_text(s, encoding='utf-8')
-          elif settings_groovy.exists():
-              s = settings_groovy.read_text(encoding='utf-8')
-              marker = "id 'com.android.application'"
-              if 'com.google.gms.google-services' not in s:
-                  s = s.replace(marker, "id 'com.google.gms.google-services' version '4.4.4' apply false\n    " + marker, 1)
-              settings_groovy.write_text(s, encoding='utf-8')
-
-          if app_kts.exists():
-              s = app_kts.read_text(encoding='utf-8')
+              settings.write_text(s, encoding='utf-8')
+          if app.exists():
+              s = app.read_text(encoding='utf-8')
               marker = 'id("com.android.application")'
               if 'com.google.gms.google-services' not in s:
                   s = s.replace(marker, marker + '\n    id("com.google.gms.google-services")', 1)
-              app_kts.write_text(s, encoding='utf-8')
-          elif app_groovy.exists():
-              s = app_groovy.read_text(encoding='utf-8')
-              marker = "id 'com.android.application'"
-              if 'com.google.gms.google-services' not in s:
-                  s = s.replace(marker, marker + "\n    id 'com.google.gms.google-services'", 1)
-              app_groovy.write_text(s, encoding='utf-8')
-          else:
-              raise SystemExit('Fichier Gradle Android introuvable')
+              app.write_text(s, encoding='utf-8')
           PY
+
+      - name: Restore permanent Android signing key
+        shell: bash
+        run: |
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > .build_app/android/app/clairvoyancemedium-release.jks
+          cat > .build_app/android/key.properties <<EOF
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyPassword=$ANDROID_KEYSTORE_PASSWORD
+          keyAlias=clairvoyancemedium
+          storeFile=clairvoyancemedium-release.jks
+          EOF
+          keytool -list -keystore .build_app/android/app/clairvoyancemedium-release.jks -alias clairvoyancemedium -storepass "$ANDROID_KEYSTORE_PASSWORD" >/dev/null
+          python3 scripts/configure_android_signing.py
 
       - name: Install dependencies
         working-directory: .build_app
@@ -142,19 +131,24 @@ jobs:
             min_sdk_android: 23
           EOF
           dart run flutter_launcher_icons
-          find android/app/src/main/res -type f -name 'ic_launcher*' -print
 
       - name: Check Dart code
         working-directory: .build_app
         run: flutter analyze lib --no-fatal-warnings --no-fatal-infos
 
-      - name: Build universal release APK
+      - name: Build permanently signed release APK
         working-directory: .build_app
+        run: flutter build apk --release --build-name=0.3.0 --build-number=${{ github.run_number }}
+
+      - name: Verify permanent APK signature
         shell: bash
         run: |
-          flutter build apk --release \
-            --build-name=0.2.2 \
-            --build-number=${{ github.run_number }}
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)
+          APK=.build_app/build/app/outputs/flutter-apk/app-release.apk
+          "$APKSIGNER" verify --verbose --print-certs "$APK" | tee signing-report.txt
+          APK_SHA=$(awk -F': ' '/Signer #1 certificate SHA-256 digest/ {print toupper($2); exit}' signing-report.txt)
+          EXPECTED_SHA=DDEAD93857F573E3232AF588181EB0282D4CEC93FD417D18B90D10CE755F6A38
+          test "$APK_SHA" = "$EXPECTED_SHA" || { echo "::error::Signature APK inattendue: $APK_SHA"; exit 1; }
 
       - name: Prepare downloadable APK
         run: cp .build_app/build/app/outputs/flutter-apk/app-release.apk ClairVoyanceMedium.apk
@@ -172,7 +166,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          NOTES='Version Android 0.2.2 reliée à Firebase et à l’App ID OneSignal ClairVoyanceMedium, avec demande d’autorisation push, métriques, logo officiel et WebView du site en temps réel.'
+          NOTES='Version Android 0.3.0 signée avec la clé de production permanente ClairVoyanceMedium.com, reliée à Firebase et OneSignal. Les futures mises à jour conserveront cette même signature.'
           if gh release view android-latest >/dev/null 2>&1; then
             gh release upload android-latest ClairVoyanceMedium.apk --clobber
             gh release edit android-latest --title 'ClairVoyanceMedium Android' --notes "$NOTES" --latest
