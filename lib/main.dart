@@ -8,10 +8,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 const String kHomeUrl = 'https://www.clairvoyancemedium.com/';
-const String kOneSignalAppId = String.fromEnvironment(
-  'ONESIGNAL_APP_ID',
-  defaultValue: '',
-);
+const String kOneSignalAppId = '1252e604-9e9d-4d50-9e4e-ca1ae6b624e3';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,8 +17,6 @@ void main() {
 }
 
 void _initPushInfrastructure() {
-  if (kOneSignalAppId.isEmpty) return;
-
   OneSignal.initialize(kOneSignalAppId);
 
   final platform = Platform.isAndroid
@@ -148,13 +143,13 @@ class _WebsiteShellState extends State<WebsiteShell> {
   }
 
   void _schedulePushPrompt() {
-    if (_pushPromptScheduled || kOneSignalAppId.isEmpty || !mounted) return;
+    if (_pushPromptScheduled || !mounted) return;
     _pushPromptScheduled = true;
     Future<void>.delayed(const Duration(milliseconds: 900), _maybePromptNotifications);
   }
 
   Future<void> _maybePromptNotifications() async {
-    if (!mounted || kOneSignalAppId.isEmpty) return;
+    if (!mounted) return;
 
     final prefs = await SharedPreferences.getInstance();
     final alreadyExplained = prefs.getBool('push_explainer_seen') ?? false;
