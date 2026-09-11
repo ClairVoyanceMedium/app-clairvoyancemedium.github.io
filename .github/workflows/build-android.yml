@@ -8,6 +8,7 @@ on:
     paths:
       - 'lib/**'
       - 'pubspec.yaml'
+      - 'assets/**'
       - '.github/workflows/build-android.yml'
 
 permissions:
@@ -42,6 +43,9 @@ jobs:
           rm -rf .build_app/lib .build_app/test
           cp -R lib .build_app/lib
 
+          mkdir -p .build_app/assets
+          base64 --decode assets/app_icon_512.png.b64 > .build_app/assets/app_icon.png
+
           python3 - <<'PY'
           from pathlib import Path
 
@@ -65,7 +69,24 @@ jobs:
 
       - name: Install dependencies
         working-directory: .build_app
-        run: flutter pub get
+        shell: bash
+        run: |
+          flutter pub get
+          flutter pub add --dev flutter_launcher_icons
+
+      - name: Generate official launcher icon
+        working-directory: .build_app
+        shell: bash
+        run: |
+          cat >> pubspec.yaml <<'EOF'
+
+          flutter_launcher_icons:
+            android: true
+            ios: false
+            image_path: "assets/app_icon.png"
+            min_sdk_android: 23
+          EOF
+          dart run flutter_launcher_icons
 
       - name: Check Dart code
         working-directory: .build_app
@@ -73,7 +94,7 @@ jobs:
 
       - name: Build universal release APK
         working-directory: .build_app
-        run: flutter build apk --release
+        run: flutter build apk --release --build-name=0.1.0 --build-number=${{ github.run_number }}
 
       - name: Prepare downloadable APK
         run: cp .build_app/build/app/outputs/flutter-apk/app-release.apk ClairVoyanceMedium.apk
@@ -95,11 +116,11 @@ jobs:
             gh release upload android-latest ClairVoyanceMedium.apk --clobber
             gh release edit android-latest \
               --title 'ClairVoyanceMedium Android' \
-              --notes 'Dernière version Android téléchargeable directement. Le contenu de l’application charge https://www.clairvoyancemedium.com/ en temps réel.' \
+              --notes 'Dernière version Android téléchargeable directement avec le logo officiel. Le contenu de l’application charge https://www.clairvoyancemedium.com/ en temps réel.' \
               --latest
           else
             gh release create android-latest ClairVoyanceMedium.apk \
               --title 'ClairVoyanceMedium Android' \
-              --notes 'Dernière version Android téléchargeable directement. Le contenu de l’application charge https://www.clairvoyancemedium.com/ en temps réel.' \
+              --notes 'Dernière version Android téléchargeable directement avec le logo officiel. Le contenu de l’application charge https://www.clairvoyancemedium.com/ en temps réel.' \
               --latest
           fi
