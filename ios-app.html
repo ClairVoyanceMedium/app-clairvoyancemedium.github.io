@@ -9,6 +9,8 @@
   <meta name="apple-mobile-web-app-title" content="ClairVoyanceMedium.com">
   <link rel="manifest" href="manifest-ios.webmanifest">
   <link rel="apple-touch-icon" href="assets/app_icon.png">
+  <script src="push-config.js"></script>
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <title>ClairVoyanceMedium.com — iPhone / iPad</title>
   <style>
     :root{--bg:#070707;--gold:#d7ad4a;--gold2:#f4da87;--text:#f7f4ec;--muted:#aaa49a;--green:#74d99d;--line:#352c1d}
@@ -24,46 +26,87 @@
     <img class="logo" src="assets/app_icon.png" alt="ClairVoyanceMedium.com">
     <div class="eyebrow">Application iPhone / iPad</div>
     <h1>ClairVoyanceMedium.com</h1>
-    <p class="lead">Cette version est conçue pour fonctionner comme une application web sur l’écran d’accueil et pour pouvoir recevoir des notifications push sur iOS/iPadOS compatibles.</p>
+    <p class="lead">Application Web installable avec notifications push, suivi des abonnements et métriques d’usage.</p>
   </div>
   <div class="steps">
-    <article class="step active" id="installStep"><div class="num">1</div><h2>Ajouter à l’écran d’accueil</h2><p>Sur iPhone/iPad, ouvrez cette page dans Safari, touchez <strong>Partager</strong>, puis <strong>Ajouter à l’écran d’accueil</strong>.</p><div class="hint">Apple exige cette étape pour autoriser les notifications Web Push sur iPhone et iPad.</div></article>
-    <article class="step" id="openStep"><div class="num">2</div><h2>Ouvrir depuis l’icône</h2><p>Fermez Safari puis ouvrez <strong>ClairVoyanceMedium.com</strong> depuis l’icône ajoutée à l’écran d’accueil.</p></article>
-    <article class="step" id="notifyStep"><div class="num">3</div><h2>Autoriser les notifications</h2><p>Une fois ouverte depuis l’écran d’accueil, touchez le bouton ci-dessous. iOS affichera sa demande officielle d’autorisation.</p><button class="btn primary" id="notifyBtn" type="button">Activer les notifications</button></article>
+    <article class="step active" id="installStep"><div class="num">1</div><h2>Ajouter à l’écran d’accueil</h2><p>Dans Safari, touchez <strong>Partager</strong>, puis <strong>Ajouter à l’écran d’accueil</strong>.</p><div class="hint">Apple exige cette étape pour le Web Push sur iPhone et iPad.</div></article>
+    <article class="step" id="openStep"><div class="num">2</div><h2>Ouvrir depuis l’icône</h2><p>Fermez Safari puis ouvrez <strong>ClairVoyanceMedium.com</strong> depuis l’icône ajoutée.</p></article>
+    <article class="step" id="notifyStep"><div class="num">3</div><h2>Autoriser les notifications</h2><p>Une fois ouverte depuis l’écran d’accueil, touchez le bouton ci-dessous.</p><button class="btn primary" id="notifyBtn" type="button">Activer les notifications</button></article>
     <article class="step"><div class="num">4</div><h2>Ouvrir le site officiel</h2><p>Votre site reste accessible directement depuis cette application.</p><a class="btn green" href="https://www.clairvoyancemedium.com/">Ouvrir ClairVoyanceMedium.com</a></article>
   </div>
-  <div class="status" id="status">Vérification de l’installation et des fonctions de notification…</div>
-  <div class="small">Les notifications Web Push nécessitent iOS/iPadOS 16.4 ou une version plus récente.</div>
+  <div class="status" id="status">Initialisation de l’application et des notifications…</div>
+  <div class="small">Web Push : iOS/iPadOS 16.4 ou version ultérieure.</div>
 </section></main>
 <script>
-(async function(){
+(function(){
   const status=document.getElementById('status');
   const installStep=document.getElementById('installStep');
   const openStep=document.getElementById('openStep');
   const notifyStep=document.getElementById('notifyStep');
   const notifyBtn=document.getElementById('notifyBtn');
   const standalone=window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
+  const cfg=window.CVM_PUSH_CONFIG||{};
+  let OneSignalClient=null;
 
   function setStatus(html){status.innerHTML=html;}
-  if('serviceWorker' in navigator){
-    try{await navigator.serviceWorker.register('./sw-ios.js');}
-    catch(e){setStatus('<span class="warn">Le service de notifications n’a pas pu être enregistré. Rechargez cette page.</span>');}
+  function markInstalled(){
+    installStep.classList.add('ok');
+    openStep.classList.add('ok');
+    notifyStep.classList.add('active');
   }
-  if(standalone){installStep.classList.add('ok');openStep.classList.add('ok');notifyStep.classList.add('active');setStatus('<span class="good">Application ouverte depuis l’écran d’accueil.</span> Vous pouvez maintenant autoriser les notifications.');}
-  else{setStatus('Ouvrez cette page dans Safari, puis utilisez <strong>Partager → Ajouter à l’écran d’accueil</strong>. Ensuite ouvrez l’icône créée.');}
+
+  if(standalone){
+    markInstalled();
+    setStatus('<span class="good">Application ouverte depuis l’écran d’accueil.</span> Initialisation des notifications…');
+  }else{
+    setStatus('Ouvrez cette page dans Safari puis utilisez <strong>Partager → Ajouter à l’écran d’accueil</strong>.');
+  }
+
+  window.OneSignalDeferred=window.OneSignalDeferred||[];
+  window.OneSignalDeferred.push(async function(OneSignal){
+    if(!cfg.oneSignalAppId){
+      if(standalone)setStatus('<span class="warn">La structure push est installée mais l’identifiant OneSignal doit encore être renseigné.</span>');
+      return;
+    }
+    try{
+      await OneSignal.init({
+        appId:cfg.oneSignalAppId,
+        serviceWorkerPath:cfg.serviceWorkerPath||'OneSignalSDKWorker.js',
+        serviceWorkerParam:{scope:cfg.serviceWorkerScope||'/app-clairvoyancemedium.github.io/'}
+      });
+      OneSignalClient=OneSignal;
+      await OneSignal.User.addTags({brand:'clairvoyancemedium',platform:'ios_web',distribution:'pwa'});
+      if(OneSignal.User.trackEvent) await OneSignal.User.trackEvent('app_open');
+      if(OneSignal.Notifications.permission){
+        notifyStep.classList.add('ok');
+        notifyStep.classList.remove('active');
+        setStatus('<span class="good">Notifications activées.</span> Cet appareil est enregistré dans les métriques push.');
+      }else if(standalone){
+        setStatus('<span class="good">Application prête.</span> Touchez <strong>Activer les notifications</strong>.');
+      }
+    }catch(e){
+      setStatus('<span class="warn">Le service push n’a pas pu être initialisé.</span> La structure est présente mais la configuration OneSignal doit être vérifiée.');
+    }
+  });
 
   notifyBtn.addEventListener('click',async()=>{
     if(!standalone){setStatus('<span class="warn">Ouvrez d’abord l’application depuis son icône sur l’écran d’accueil.</span>');return;}
-    if(!('Notification' in window)){setStatus('<span class="warn">Cette version d’iOS ne fournit pas l’API de notification nécessaire.</span>');return;}
+    if(!cfg.oneSignalAppId){setStatus('<span class="warn">La structure est prête, mais le compte OneSignal doit encore être relié avant l’activation réelle.</span>');return;}
+    if(!OneSignalClient){setStatus('Initialisation du service de notifications en cours… Réessayez dans quelques secondes.');return;}
     try{
-      const permission=await Notification.requestPermission();
-      if(permission==='granted'){
+      const supported=OneSignalClient.Notifications.isPushSupported();
+      if(!supported){setStatus('<span class="warn">Les notifications Web Push ne sont pas prises en charge sur cet appareil.</span>');return;}
+      await OneSignalClient.Notifications.requestPermission();
+      if(OneSignalClient.Notifications.permission){
         notifyStep.classList.add('ok');notifyStep.classList.remove('active');
-        setStatus('<span class="good">Autorisation accordée.</span> La partie iPhone est prête à être reliée au service d’envoi Web Push.');
-      }else if(permission==='denied'){
-        setStatus('<span class="warn">Notifications refusées.</span> Vous pourrez modifier ce choix dans les réglages de notifications de l’iPhone.');
-      }else setStatus('Autorisation non accordée pour le moment.');
-    }catch(e){setStatus('<span class="warn">Impossible d’ouvrir la demande de notification.</span> Vérifiez que l’application a été ouverte depuis l’écran d’accueil.');}
+        await OneSignalClient.User.addTags({push_permission:'granted',platform:'ios_web'});
+        if(OneSignalClient.User.trackEvent) await OneSignalClient.User.trackEvent('push_permission_granted');
+        setStatus('<span class="good">Notifications activées.</span> Vous pourrez désormais recevoir les campagnes ClairVoyanceMedium.com.');
+      }else{
+        await OneSignalClient.User.addTag('push_permission','not_granted');
+        setStatus('<span class="warn">Notifications non autorisées.</span> Vous pourrez modifier ce choix dans les réglages de l’iPhone.');
+      }
+    }catch(e){setStatus('<span class="warn">Impossible d’ouvrir la demande de notification.</span> Vérifiez que l’application a été lancée depuis l’écran d’accueil.');}
   });
 })();
 </script>
