@@ -1,0 +1,105 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'lib/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/build-android.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Create Android project
+        shell: bash
+        run: |
+          rm -rf .build_app
+          flutter create --platforms=android --org com.clairvoyancemedium --project-name app .build_app
+          cp pubspec.yaml .build_app/pubspec.yaml
+          rm -rf .build_app/lib
+          cp -R lib .build_app/lib
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          manifest = Path('.build_app/android/app/src/main/AndroidManifest.xml')
+          text = manifest.read_text(encoding='utf-8')
+
+          if 'android.permission.INTERNET' not in text:
+              text = text.replace(
+                  '<application',
+                  '<uses-permission android:name="android.permission.INTERNET" />\n    <application',
+                  1,
+              )
+
+          text = text.replace(
+              'android:label="app"',
+              'android:label="ClairVoyanceMedium.com"',
+          )
+
+          manifest.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Install dependencies
+        working-directory: .build_app
+        run: flutter pub get
+
+      - name: Check Dart code
+        working-directory: .build_app
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: Build universal release APK
+        working-directory: .build_app
+        run: flutter build apk --release
+
+      - name: Prepare downloadable APK
+        run: cp .build_app/build/app/outputs/flutter-apk/app-release.apk ClairVoyanceMedium.apk
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClairVoyanceMedium-Android
+          path: ClairVoyanceMedium.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish or update permanent Android release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if gh release view android-latest >/dev/null 2>&1; then
+            gh release upload android-latest ClairVoyanceMedium.apk --clobber
+            gh release edit android-latest \
+              --title 'ClairVoyanceMedium Android' \
+              --notes 'Dernière version Android téléchargeable directement. Le contenu de l’application charge https://www.clairvoyancemedium.com/ en temps réel.' \
+              --latest
+          else
+            gh release create android-latest ClairVoyanceMedium.apk \
+              --title 'ClairVoyanceMedium Android' \
+              --notes 'Dernière version Android téléchargeable directement. Le contenu de l’application charge https://www.clairvoyancemedium.com/ en temps réel.' \
+              --latest
+          fi
