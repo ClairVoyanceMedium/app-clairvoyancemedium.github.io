@@ -1,15 +1,45 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 const String kHomeUrl = 'https://www.clairvoyancemedium.com/';
+const String kOneSignalAppId = String.fromEnvironment(
+  'ONESIGNAL_APP_ID',
+  defaultValue: '',
+);
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  _initPushInfrastructure();
   runApp(const ClairVoyanceMediumApp());
+}
+
+void _initPushInfrastructure() {
+  if (kOneSignalAppId.isEmpty) return;
+
+  OneSignal.initialize(kOneSignalAppId);
+
+  final platform = Platform.isAndroid
+      ? 'android_native'
+      : Platform.isIOS
+          ? 'ios_native'
+          : 'other';
+
+  OneSignal.User.addTags({
+    'brand': 'clairvoyancemedium',
+    'platform': platform,
+    'distribution': Platform.isAndroid ? 'direct_apk' : 'native',
+  });
+
+  // OneSignal suit automatiquement les sessions, la version de l'appareil,
+  // le système, la version de l'application et l'état de l'abonnement.
+  // Cet événement facilite aussi les analyses d'ouverture côté tableau de bord.
+  OneSignal.User.trackEvent('app_open');
 }
 
 class ClairVoyanceMediumApp extends StatelessWidget {
@@ -46,6 +76,7 @@ class _WebsiteShellState extends State<WebsiteShell> {
 
   int _progress = 0;
   bool _mainFrameError = false;
+  bool _pushPromptScheduled = false;
   String? _errorText;
 
   @override
@@ -74,6 +105,7 @@ class _WebsiteShellState extends State<WebsiteShell> {
           onPageFinished: (_) {
             if (!mounted) return;
             setState(() => _progress = 100);
+            _schedulePushPrompt();
           },
           onWebResourceError: (error) {
             if (error.isForMainFrame == true && mounted) {
@@ -88,8 +120,8 @@ class _WebsiteShellState extends State<WebsiteShell> {
             if (uri == null) return NavigationDecision.navigate;
 
             if (uri.scheme == 'http' || uri.scheme == 'https') {
-              // Les paiements, 3-D Secure, PayPal, Stripe et tawk.to restent
-              // dans la même WebView afin de préserver la session et le panier.
+              // Stripe, 3-D Secure, PayPal et tawk.to restent dans la WebView
+              // afin de préserver le panier et la session utilisateur.
               return NavigationDecision.navigate;
             }
 
@@ -102,12 +134,10 @@ class _WebsiteShellState extends State<WebsiteShell> {
     if (Platform.isAndroid &&
         _controller.platform is AndroidWebViewController &&
         _cookieManager.platform is AndroidWebViewCookieManager) {
-      final androidController =
-          _controller.platform as AndroidWebViewController;
+      final androidController = _controller.platform as AndroidWebViewController;
       final androidCookies =
           _cookieManager.platform as AndroidWebViewCookieManager;
 
-      // Important pour les parcours de paiement, widgets tiers et sessions.
       await androidCookies.setAcceptThirdPartyCookies(androidController, true);
       await androidController.setMediaPlaybackRequiresUserGesture(false);
       await androidController.setPaymentRequestEnabled(true);
@@ -117,12 +147,64 @@ class _WebsiteShellState extends State<WebsiteShell> {
     await _controller.loadRequest(Uri.parse(kHomeUrl));
   }
 
+  void _schedulePushPrompt() {
+    if (_pushPromptScheduled || kOneSignalAppId.isEmpty || !mounted) return;
+    _pushPromptScheduled = true;
+    Future<void>.delayed(const Duration(milliseconds: 900), _maybePromptNotifications);
+  }
+
+  Future<void> _maybePromptNotifications() async {
+    if (!mounted || kOneSignalAppId.isEmpty) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final alreadyExplained = prefs.getBool('push_explainer_seen') ?? false;
+    final permissionGranted = OneSignal.Notifications.permission;
+
+    if (permissionGranted || alreadyExplained || !mounted) return;
+
+    final accepted = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF111111),
+        title: const Text('Recevoir nos notifications'),
+        content: const Text(
+          'Autorisez les notifications pour recevoir les nouveautés, offres et informations importantes de ClairVoyanceMedium.com. Vous pourrez les désactiver à tout moment dans les réglages du téléphone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Plus tard'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFD7AD4A),
+              foregroundColor: Colors.black,
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Autoriser'),
+          ),
+        ],
+      ),
+    );
+
+    await prefs.setBool('push_explainer_seen', true);
+
+    if (accepted == true) {
+      await OneSignal.Notifications.requestPermission(true);
+      OneSignal.User.trackEvent('push_permission_prompted');
+      OneSignal.User.addTag(
+        'push_permission',
+        OneSignal.Notifications.permission ? 'granted' : 'not_granted',
+      );
+    }
+  }
+
   Future<void> _openExternal(Uri uri) async {
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
-      // Si aucune application ne sait gérer le protocole, on ne bloque pas
-      // l'application principale.
+      // Aucun blocage si le protocole n'est pas géré par l'appareil.
     }
   }
 
@@ -193,8 +275,11 @@ class _OfflineView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.wifi_off_rounded,
-                  size: 54, color: Color(0xFFD7AD4A)),
+              const Icon(
+                Icons.wifi_off_rounded,
+                size: 54,
+                color: Color(0xFFD7AD4A),
+              ),
               const SizedBox(height: 18),
               const Text(
                 'Connexion indisponible',
