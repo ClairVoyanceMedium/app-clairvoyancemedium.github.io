@@ -3,161 +3,45 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#090909">
-  <meta name="robots" content="noindex,nofollow">
-  <title>ClairVoyanceMedium.com — App Control Center</title>
+  <meta name="theme-color" content="#080808">
+  <title>Application ClairVoyanceMedium.com</title>
+  <meta name="description" content="Application officielle ClairVoyanceMedium.com pour Android, iPhone et tablettes.">
   <style>
-    :root{--bg:#070707;--panel:#101010;--panel2:#171717;--gold:#d7ad4a;--gold2:#f2d587;--text:#f5f2ea;--muted:#a9a399;--line:#2b261c;--good:#44c483;--warn:#e7b44b;--bad:#e46b6b;--r:18px;--shadow:0 16px 40px rgba(0,0,0,.28)}
-    *{box-sizing:border-box}html{background:var(--bg);color-scheme:dark}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:radial-gradient(circle at 85% -10%,rgba(215,173,74,.16),transparent 32%),var(--bg);color:var(--text)}
-    button,input,textarea,select{font:inherit}button{cursor:pointer}.app{min-height:100dvh;display:grid;grid-template-columns:260px 1fr}.side{position:sticky;top:0;height:100dvh;border-right:1px solid var(--line);padding:22px 16px;background:rgba(8,8,8,.96);backdrop-filter:blur(16px)}
-    .brand{padding:8px 10px 24px}.brand strong{display:block;font-size:18px;letter-spacing:.2px;color:var(--gold2)}.brand span{font-size:12px;color:var(--muted)}nav{display:grid;gap:8px}.nav{border:1px solid transparent;background:transparent;color:var(--muted);padding:12px 14px;border-radius:12px;text-align:left}.nav:hover,.nav.active{background:linear-gradient(135deg,rgba(215,173,74,.16),rgba(215,173,74,.04));border-color:#5a4821;color:var(--gold2)}
-    .side-foot{position:absolute;left:16px;right:16px;bottom:18px;padding:12px;border:1px solid var(--line);border-radius:12px;color:var(--muted);font-size:12px}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;background:var(--warn)}
-    main{padding:28px;max-width:1500px;width:100%;margin:auto}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:24px}.top h1{font-size:28px;margin:0}.top p{margin:5px 0 0;color:var(--muted)}.pill{padding:9px 12px;border:1px solid #5a4821;border-radius:999px;color:var(--gold2);font-size:12px;background:rgba(215,173,74,.08)}
-    .view{display:none}.view.active{display:block}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:18px}.metric b{font-size:30px;display:block;margin-top:8px}.metric small,.muted{color:var(--muted)}.metric .trend{font-size:12px;color:var(--good);margin-top:8px}.wide{grid-column:span 2}.full{grid-column:1/-1}.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.section-title h2{font-size:17px;margin:0}.section-title span{font-size:12px;color:var(--muted)}
-    .chart{height:220px;display:flex;align-items:flex-end;gap:8px;padding-top:20px}.bar{flex:1;background:linear-gradient(180deg,var(--gold2),#71561f);border-radius:8px 8px 3px 3px;min-height:8px;opacity:.9}.empty{height:180px;display:grid;place-items:center;border:1px dashed #403722;border-radius:14px;color:var(--muted);text-align:center;padding:20px}
-    .form{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:grid;gap:7px}.field.full{grid-column:1/-1}.field label{font-size:12px;color:var(--muted)}input,textarea,select{width:100%;border:1px solid #393226;background:#0b0b0b;color:var(--text);border-radius:12px;padding:12px 13px;outline:none}textarea{min-height:120px;resize:vertical}input:focus,textarea:focus,select:focus{border-color:var(--gold)}
-    .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.btn{border-radius:12px;padding:11px 15px;border:1px solid #4f4225;background:#17130b;color:var(--gold2);font-weight:650}.btn.primary{background:linear-gradient(135deg,#d6aa43,#a77b1e);color:#0b0905;border-color:#d6aa43}.btn.ghost{background:transparent;color:var(--muted);border-color:#333}.btn:disabled{opacity:.45;cursor:not-allowed}
-    .preview{border:1px solid var(--line);border-radius:16px;padding:14px;background:#0a0a0a}.phone-note{display:flex;gap:12px}.app-icon{width:44px;height:44px;border-radius:11px;background:linear-gradient(135deg,#171717,#312712);border:1px solid #665123;display:grid;place-items:center;color:var(--gold2);font-weight:800}.note-body{flex:1}.note-body strong{display:block}.note-body p{margin:4px 0;color:#ddd;font-size:13px}.media-preview{margin-top:12px;aspect-ratio:16/8;border:1px dashed #403722;border-radius:12px;display:grid;place-items:center;color:var(--muted);overflow:hidden}.media-preview img{width:100%;height:100%;object-fit:cover}
-    table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:12px 10px;border-bottom:1px solid #29251d;text-align:left}th{color:var(--muted);font-weight:600}.status{display:inline-flex;padding:5px 8px;border-radius:999px;background:#14261d;color:#7ee0a9;font-size:11px}.status.wait{background:#292312;color:#ebc86e}
-    .downloads{display:grid;grid-template-columns:1fr 1fr;gap:14px}.store{padding:22px;border:1px solid var(--line);border-radius:16px;background:#0d0d0d}.store h3{margin:0 0 7px}.store p{color:var(--muted)}.linkbox{display:flex;gap:8px}.linkbox input{flex:1}.notice{padding:13px 15px;border:1px solid #5a4821;border-radius:12px;background:rgba(215,173,74,.08);color:#dfcfaa;font-size:13px;line-height:1.45}
-    .settings{display:grid;grid-template-columns:1fr 1fr;gap:14px}.check{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #29251d}.switch{width:44px;height:24px;border-radius:999px;background:#333;position:relative}.switch:after{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;border-radius:50%;background:#aaa}.switch.on{background:#7d611f}.switch.on:after{left:23px;background:var(--gold2)}
-    footer{color:#716d65;font-size:11px;text-align:center;padding:26px 0 6px}.mobile-head{display:none}
-    @media(max-width:980px){.app{grid-template-columns:1fr}.side{display:none}.mobile-head{display:flex;position:sticky;top:0;z-index:20;background:rgba(7,7,7,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:10px;gap:7px;overflow:auto}.mobile-head .nav{white-space:nowrap;padding:9px 11px;font-size:12px}main{padding:18px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wide{grid-column:span 2}.top{align-items:flex-start}.top h1{font-size:22px}.form,.settings,.downloads{grid-template-columns:1fr}.field.full{grid-column:auto}}
-    @media(max-width:560px){.grid{grid-template-columns:1fr}.wide,.full{grid-column:1}.top{display:block}.pill{display:inline-block;margin-top:12px}.metric b{font-size:26px}.linkbox{display:grid}}
+    :root{--bg:#070707;--panel:#111;--gold:#d7ad4a;--gold2:#f3d987;--text:#f5f2ea;--muted:#aaa49a;--line:#332b1c}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}body{background:radial-gradient(circle at 50% -10%,rgba(215,173,74,.18),transparent 36%),#070707}
+    .wrap{min-height:100dvh;display:grid;place-items:center;padding:28px}.card{width:min(760px,100%);border:1px solid var(--line);border-radius:26px;background:linear-gradient(180deg,#151515,#0b0b0b);box-shadow:0 24px 70px rgba(0,0,0,.45);padding:34px;text-align:center}
+    .logo{width:92px;height:92px;border-radius:24px;margin:0 auto 20px;display:grid;place-items:center;border:1px solid #725b27;background:linear-gradient(145deg,#0b0b0b,#251d0c);color:var(--gold2);font-weight:800;font-size:25px;letter-spacing:.5px}.eyebrow{color:var(--gold2);font-size:13px;text-transform:uppercase;letter-spacing:1.8px}.card h1{font-size:clamp(28px,6vw,48px);margin:10px 0 12px}.lead{color:var(--muted);line-height:1.6;max-width:620px;margin:0 auto 24px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}.btn{display:flex;align-items:center;justify-content:center;min-height:52px;padding:13px 18px;border-radius:14px;text-decoration:none;font-weight:750;border:1px solid #5d4a22;background:#15120b;color:var(--gold2)}.btn.primary{background:linear-gradient(135deg,#e2bb5c,#a77b1f);border-color:#dbb354;color:#0b0905}.btn.disabled{opacity:.48;pointer-events:none}.status{margin-top:22px;padding:14px;border:1px solid #2d291f;border-radius:14px;background:#0a0a0a;color:var(--muted);font-size:13px;line-height:1.5}.platform{margin-top:16px;color:#777;font-size:12px}.small{margin-top:24px;color:#716d65;font-size:11px}.small a{color:#bfa86d}.only-one{grid-template-columns:1fr}
+    @media(max-width:600px){.card{padding:26px 18px;border-radius:20px}.actions{grid-template-columns:1fr}.logo{width:78px;height:78px;border-radius:20px}}
   </style>
 </head>
 <body>
-<div class="app">
-  <aside class="side">
-    <div class="brand"><strong>ClairVoyanceMedium.com</strong><span>App Control Center</span></div>
-    <nav id="navDesktop">
-      <button class="nav active" data-view="dashboard">Tableau de bord</button>
-      <button class="nav" data-view="notifications">Notifications</button>
-      <button class="nav" data-view="campaigns">Campagnes</button>
-      <button class="nav" data-view="analytics">Statistiques</button>
-      <button class="nav" data-view="downloads">Téléchargements</button>
-      <button class="nav" data-view="settings">Paramètres</button>
-    </nav>
-    <div class="side-foot"><span class="dot"></span>Firebase non connecté<br>Interface prête pour configuration.</div>
-  </aside>
+  <main class="wrap">
+    <section class="card">
+      <div class="logo">CV</div>
+      <div class="eyebrow">Application officielle</div>
+      <h1>ClairVoyanceMedium.com</h1>
+      <p class="lead">L’application reprend directement la version en ligne de <strong>www.clairvoyancemedium.com</strong>. Le contenu reste donc à jour automatiquement, avec la même navigation, le panier, les paiements et le chat.</p>
 
-  <div>
-    <div class="mobile-head" id="navMobile">
-      <button class="nav active" data-view="dashboard">Accueil</button>
-      <button class="nav" data-view="notifications">Push</button>
-      <button class="nav" data-view="analytics">Stats</button>
-      <button class="nav" data-view="downloads">App</button>
-      <button class="nav" data-view="settings">Réglages</button>
-    </div>
-
-    <main>
-      <div class="top">
-        <div><h1 id="pageTitle">Tableau de bord</h1><p>Contrôle de l'application ClairVoyanceMedium.com</p></div>
-        <div class="pill">Architecture gratuite · GitHub + Firebase Spark</div>
+      <div class="actions" id="actions">
+        <a class="btn primary" href="https://www.clairvoyancemedium.com/" id="webBtn">Ouvrir maintenant</a>
+        <a class="btn disabled" href="#" id="downloadBtn" aria-disabled="true">Application en préparation</a>
       </div>
 
-      <section class="view active" id="dashboard">
-        <div class="grid">
-          <div class="card metric"><small>Installations</small><b id="mInstalls">—</b><div class="trend">En attente de connexion Analytics</div></div>
-          <div class="card metric"><small>Utilisateurs actifs</small><b id="mActive">—</b><div class="trend">Android + iOS</div></div>
-          <div class="card metric"><small>Push envoyées</small><b id="mPush">0</b><div class="trend">Historique local initialisé</div></div>
-          <div class="card metric"><small>Taux d'ouverture</small><b id="mOpen">—</b><div class="trend">Donnée disponible après FCM</div></div>
-
-          <div class="card wide"><div class="section-title"><h2>Activité</h2><span>30 derniers jours</span></div><div class="chart" aria-label="Aperçu graphique"><div class="bar" style="height:18%"></div><div class="bar" style="height:31%"></div><div class="bar" style="height:25%"></div><div class="bar" style="height:42%"></div><div class="bar" style="height:37%"></div><div class="bar" style="height:54%"></div><div class="bar" style="height:48%"></div><div class="bar" style="height:70%"></div><div class="bar" style="height:58%"></div><div class="bar" style="height:76%"></div><div class="bar" style="height:66%"></div><div class="bar" style="height:85%"></div></div></div>
-          <div class="card wide"><div class="section-title"><h2>État du projet</h2><span>v0.1</span></div><table><tr><td>Interface d'administration</td><td><span class="status">Prête</span></td></tr><tr><td>Site principal</td><td><span class="status">Actif</span></td></tr><tr><td>Notifications FCM</td><td><span class="status wait">À connecter</span></td></tr><tr><td>APK Android</td><td><span class="status wait">À compiler</span></td></tr><tr><td>iOS / iPadOS</td><td><span class="status wait">À compiler</span></td></tr></table></div>
-
-          <div class="card full"><div class="section-title"><h2>Accès rapide</h2><span>Outils principaux</span></div><div class="actions"><button class="btn primary" onclick="go('notifications')">Créer une notification</button><a class="btn" href="https://www.clairvoyancemedium.com/" target="_blank" rel="noopener">Ouvrir le site</a><button class="btn" onclick="go('downloads')">Téléchargements</button><button class="btn ghost" onclick="go('settings')">Configuration</button></div></div>
-        </div>
-      </section>
-
-      <section class="view" id="notifications">
-        <div class="grid">
-          <div class="card wide">
-            <div class="section-title"><h2>Créer une notification push</h2><span>Android · iPhone · tablettes</span></div>
-            <div class="form">
-              <div class="field"><label>Titre</label><input id="nTitle" maxlength="70" placeholder="Promotion aujourd'hui"></div>
-              <div class="field"><label>Destinataires</label><select id="nAudience"><option value="all">Tous les appareils</option><option value="android">Android uniquement</option><option value="ios">iPhone / iPad uniquement</option></select></div>
-              <div class="field full"><label>Message</label><textarea id="nMessage" maxlength="500" placeholder="Écrivez librement votre notification..."></textarea></div>
-              <div class="field"><label>Image — URL HTTPS</label><input id="nImage" type="url" placeholder="https://..."></div>
-              <div class="field"><label>Vidéo — URL HTTPS</label><input id="nVideo" type="url" placeholder="https://... (optionnel)"></div>
-              <div class="field"><label>Page ouverte au clic</label><input id="nLink" type="url" value="https://www.clairvoyancemedium.com/"></div>
-              <div class="field"><label>Envoi</label><select id="nTiming"><option value="now">Maintenant</option><option value="scheduled">Programmer</option></select></div>
-              <div class="field full" id="scheduleBox" style="display:none"><label>Date et heure</label><input id="nDate" type="datetime-local"></div>
-            </div>
-            <div class="actions"><button class="btn primary" id="sendBtn">Envoyer</button><button class="btn" id="draftBtn">Enregistrer le brouillon</button><button class="btn ghost" id="clearBtn">Effacer</button></div>
-            <div class="notice" style="margin-top:14px">Sécurité : l'envoi réel ne sera activé qu'après connexion à Firebase/FCM via un mécanisme sécurisé. Aucune clé serveur ne sera placée dans cette page publique.</div>
-          </div>
-
-          <div class="card wide">
-            <div class="section-title"><h2>Aperçu</h2><span>Notification</span></div>
-            <div class="preview">
-              <div class="phone-note"><div class="app-icon">CV</div><div class="note-body"><strong id="pTitle">ClairVoyanceMedium.com</strong><p id="pMessage">Votre message apparaîtra ici.</p><small class="muted">maintenant</small></div></div>
-              <div class="media-preview" id="mediaPreview">Aucune image</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="view" id="campaigns">
-        <div class="card"><div class="section-title"><h2>Historique des campagnes</h2><span id="campaignCount">0 campagne</span></div><div id="campaignTable" class="empty">Aucune campagne enregistrée pour le moment.</div></div>
-      </section>
-
-      <section class="view" id="analytics">
-        <div class="grid">
-          <div class="card metric"><small>Android</small><b>—</b><div class="muted">Répartition après Analytics</div></div>
-          <div class="card metric"><small>iPhone / iPad</small><b>—</b><div class="muted">Répartition après Analytics</div></div>
-          <div class="card metric"><small>Sessions</small><b>—</b><div class="muted">Firebase Analytics</div></div>
-          <div class="card metric"><small>Crashs</small><b>—</b><div class="muted">Crashlytics</div></div>
-          <div class="card wide"><div class="section-title"><h2>Installations / activité</h2><span>À connecter</span></div><div class="empty">Les vraies données apparaîtront ici après connexion de Firebase Analytics et des applications natives.</div></div>
-          <div class="card wide"><div class="section-title"><h2>Performance marketing</h2><span>Push</span></div><div class="empty">Ouvertures, clics, campagnes et conversions mesurables apparaîtront ici.</div></div>
-        </div>
-      </section>
-
-      <section class="view" id="downloads">
-        <div class="downloads">
-          <div class="store"><h3>Android / Tablettes</h3><p>Distribution directe APK + Google Play ultérieurement.</p><button class="btn primary" disabled>APK bientôt disponible</button></div>
-          <div class="store"><h3>iPhone / iPad</h3><p>App Store et méthodes Apple autorisées lorsqu'elles sont disponibles.</p><button class="btn" disabled>Version iOS bientôt disponible</button></div>
-        </div>
-        <div class="card" style="margin-top:14px"><div class="section-title"><h2>Lien unique</h2><span>Android + iOS</span></div><div class="linkbox"><input id="universalLink" readonly value="À définir : https://www.clairvoyancemedium.com/app"><button class="btn" onclick="copyUniversal()">Copier</button></div><p class="muted">Ce lien sera configuré pour rediriger automatiquement vers la bonne méthode de téléchargement selon l'appareil.</p></div>
-      </section>
-
-      <section class="view" id="settings">
-        <div class="settings">
-          <div class="card"><div class="section-title"><h2>Fonctions application</h2><span>Préconfiguration</span></div><div class="check"><span>tawk.to</span><span class="switch on"></span></div><div class="check"><span>Stripe / PayPal</span><span class="switch on"></span></div><div class="check"><span>Cookies & sessions</span><span class="switch on"></span></div><div class="check"><span>DOM Storage / JavaScript</span><span class="switch on"></span></div><div class="check"><span>Deep links</span><span class="switch on"></span></div></div>
-          <div class="card"><div class="section-title"><h2>Services</h2><span>0 € recherché</span></div><div class="check"><span>GitHub</span><span class="status">Actif</span></div><div class="check"><span>Firebase Spark</span><span class="status wait">À connecter</span></div><div class="check"><span>Cloud Messaging</span><span class="status wait">À connecter</span></div><div class="check"><span>Analytics / Crashlytics</span><span class="status wait">À connecter</span></div></div>
-          <div class="card full"><div class="section-title"><h2>Site principal</h2><span>WebView native</span></div><div class="linkbox"><input readonly value="https://www.clairvoyancemedium.com/"><a class="btn" href="https://www.clairvoyancemedium.com/" target="_blank" rel="noopener">Tester</a></div></div>
-        </div>
-      </section>
-
-      <footer>ClairVoyanceMedium.com · Control Center · Les données réelles seront connectées sans exposer de secret dans GitHub Pages.</footer>
-    </main>
-  </div>
-</div>
-
+      <div class="status" id="status">Version native en cours de construction : Android, tablettes Android, iPhone et iPad. Le cœur de l’application charge directement le site officiel dans une WebView native afin de conserver la session, les cookies, Stripe, PayPal et tawk.to.</div>
+      <div class="platform" id="platform"></div>
+      <div class="small">Site officiel : <a href="https://www.clairvoyancemedium.com/">www.clairvoyancemedium.com</a></div>
+    </section>
+  </main>
 <script>
-  const titles={dashboard:'Tableau de bord',notifications:'Notifications push',campaigns:'Campagnes',analytics:'Statistiques',downloads:'Téléchargements',settings:'Paramètres'};
-  function go(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.view===id));document.getElementById('pageTitle').textContent=titles[id]||'ClairVoyanceMedium.com';window.scrollTo({top:0,behavior:'smooth'});}
-  document.querySelectorAll('.nav').forEach(b=>b.addEventListener('click',()=>go(b.dataset.view)));
-
-  const $=id=>document.getElementById(id);
-  const title=$('nTitle'),message=$('nMessage'),image=$('nImage'),video=$('nVideo'),link=$('nLink'),audience=$('nAudience'),timing=$('nTiming'),date=$('nDate');
-  function refreshPreview(){ $('pTitle').textContent=title.value.trim()||'ClairVoyanceMedium.com'; $('pMessage').textContent=message.value.trim()||'Votre message apparaîtra ici.'; const url=image.value.trim(); const box=$('mediaPreview'); if(url){box.innerHTML='';const img=document.createElement('img');img.alt='Aperçu image';img.referrerPolicy='no-referrer';img.src=url;img.onerror=()=>box.textContent='Impossible de charger cette image';box.appendChild(img)}else{box.textContent=video.value.trim()?'Vidéo associée — une miniature sera utilisée':'Aucune image'}}
-  [title,message,image,video].forEach(el=>el.addEventListener('input',refreshPreview));
-  timing.addEventListener('change',()=>{$('scheduleBox').style.display=timing.value==='scheduled'?'grid':'none'});
-
-  function getDraft(){try{return JSON.parse(localStorage.getItem('cvm_notification_draft')||'null')}catch{return null}}
-  function saveDraft(){const d={title:title.value,message:message.value,image:image.value,video:video.value,link:link.value,audience:audience.value,timing:timing.value,date:date.value,updated:new Date().toISOString()};localStorage.setItem('cvm_notification_draft',JSON.stringify(d));alert('Brouillon enregistré sur cet appareil.');}
-  function loadDraft(){const d=getDraft();if(!d)return;title.value=d.title||'';message.value=d.message||'';image.value=d.image||'';video.value=d.video||'';link.value=d.link||'https://www.clairvoyancemedium.com/';audience.value=d.audience||'all';timing.value=d.timing||'now';date.value=d.date||'';$('scheduleBox').style.display=timing.value==='scheduled'?'grid':'none';refreshPreview()}
-  function clearComposer(){if(!confirm('Effacer le contenu de la notification ?'))return;title.value='';message.value='';image.value='';video.value='';link.value='https://www.clairvoyancemedium.com/';audience.value='all';timing.value='now';date.value='';localStorage.removeItem('cvm_notification_draft');$('scheduleBox').style.display='none';refreshPreview()}
-  $('draftBtn').addEventListener('click',saveDraft);$('clearBtn').addEventListener('click',clearComposer);
-  $('sendBtn').addEventListener('click',()=>{if(!title.value.trim()||!message.value.trim()){alert('Ajoutez au minimum un titre et un message.');return}alert('Le formulaire est prêt. L’envoi réel sera activé après connexion sécurisée de Firebase Cloud Messaging. Aucune clé privée ne sera exposée dans index.html.');});
-
-  function readCampaigns(){try{return JSON.parse(localStorage.getItem('cvm_campaigns')||'[]')}catch{return[]}}
-  function renderCampaigns(){const rows=readCampaigns();$('campaignCount').textContent=rows.length+(rows.length>1?' campagnes':' campagne');if(!rows.length){$('campaignTable').className='empty';$('campaignTable').textContent='Aucune campagne enregistrée pour le moment.';return}$('campaignTable').className='';$('campaignTable').innerHTML='<table><thead><tr><th>Titre</th><th>Cible</th><th>Date</th><th>Statut</th></tr></thead><tbody>'+rows.map(r=>`<tr><td>${esc(r.title)}</td><td>${esc(r.audience)}</td><td>${new Date(r.created).toLocaleString('fr-FR')}</td><td><span class="status wait">${esc(r.status)}</span></td></tr>`).join('')+'</tbody></table>'}
-  function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-  function copyUniversal(){const i=$('universalLink');navigator.clipboard?.writeText(i.value).then(()=>alert('Lien copié.')).catch(()=>{i.select();document.execCommand('copy')})}
-  window.copyUniversal=copyUniversal;window.go=go;
-  loadDraft();renderCampaigns();refreshPreview();
+(function(){
+  const ua=navigator.userAgent||'';
+  const android=/Android/i.test(ua);
+  const ios=/iPhone|iPad|iPod/i.test(ua) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  const platform=document.getElementById('platform');
+  if(android) platform.textContent='Appareil détecté : Android';
+  else if(ios) platform.textContent='Appareil détecté : iPhone / iPad';
+  else platform.textContent='Vous pourrez utiliser ce même lien sur Android, iPhone et tablette.';
+})();
 </script>
 </body>
 </html>
