@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ClairVoyanceMedium.com">
+  <link rel="manifest" href="manifest-ios.webmanifest">
+  <link rel="apple-touch-icon" href="assets/app_icon.png">
+  <title>ClairVoyanceMedium.com — iPhone / iPad</title>
+  <style>
+    :root{--bg:#070707;--gold:#d7ad4a;--gold2:#f4da87;--text:#f7f4ec;--muted:#aaa49a;--green:#74d99d;--line:#352c1d}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    body{background:radial-gradient(circle at 50% -10%,rgba(215,173,74,.18),transparent 35%),#070707}.wrap{min-height:100dvh;padding:22px 14px 40px}.card{width:min(720px,100%);margin:auto;border:1px solid var(--line);border-radius:24px;background:linear-gradient(180deg,#151515,#0b0b0b);padding:26px 18px;box-shadow:0 24px 70px rgba(0,0,0,.5)}
+    .top{text-align:center}.logo{width:96px;height:96px;border-radius:23px;object-fit:cover;border:1px solid #725b27;background:#111}.eyebrow{margin-top:14px;color:var(--gold2);font-size:12px;text-transform:uppercase;letter-spacing:1.6px}.top h1{font-size:clamp(28px,7vw,46px);margin:8px 0}.lead{color:var(--muted);line-height:1.55;margin:0 auto 20px;max-width:590px}
+    .steps{display:grid;gap:10px}.step{position:relative;border:1px solid #302b21;border-radius:17px;background:#0d0d0d;padding:15px 14px 15px 58px}.step.active{border-color:#b98b2f;background:linear-gradient(180deg,#17130c,#0d0d0d)}.step.ok{border-color:#28563c;background:#0c1510}.num{position:absolute;left:14px;top:15px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#242018;border:1px solid #5a4825;color:var(--gold2);font-weight:900}.step.ok .num{background:#11321f;border-color:#377c53;color:#99efb8}.step h2{font-size:16px;margin:0 0 5px}.step p{font-size:13px;line-height:1.5;color:#beb8ae;margin:0 0 10px}.hint{font-size:12px;line-height:1.45;color:#f0ddb1;border-left:3px solid #9b762c;padding-left:9px;margin:9px 0}.btn{display:flex;align-items:center;justify-content:center;min-height:50px;width:100%;padding:12px 15px;border-radius:13px;text-decoration:none;font-weight:800;border:1px solid #5d4a22;background:#14110b;color:var(--gold2);cursor:pointer}.btn.primary{background:linear-gradient(135deg,#e2bb5c,#a77b1f);border-color:#dbb354;color:#0b0905}.btn.green{background:#12311f;border-color:#367a50;color:#b7f2cb}.status{margin-top:14px;border:1px solid #2d291f;border-radius:14px;padding:13px;color:#c8c2b8;font-size:13px;line-height:1.5;background:#0a0a0a}.good{color:#9cebb8}.warn{color:#f0d188}.small{text-align:center;margin-top:18px;color:#716d65;font-size:11px}
+  </style>
+</head>
+<body>
+<main class="wrap"><section class="card">
+  <div class="top">
+    <img class="logo" src="assets/app_icon.png" alt="ClairVoyanceMedium.com">
+    <div class="eyebrow">Application iPhone / iPad</div>
+    <h1>ClairVoyanceMedium.com</h1>
+    <p class="lead">Cette version est conçue pour fonctionner comme une application web sur l’écran d’accueil et pour pouvoir recevoir des notifications push sur iOS/iPadOS compatibles.</p>
+  </div>
+  <div class="steps">
+    <article class="step active" id="installStep"><div class="num">1</div><h2>Ajouter à l’écran d’accueil</h2><p>Sur iPhone/iPad, ouvrez cette page dans Safari, touchez <strong>Partager</strong>, puis <strong>Ajouter à l’écran d’accueil</strong>.</p><div class="hint">Apple exige cette étape pour autoriser les notifications Web Push sur iPhone et iPad.</div></article>
+    <article class="step" id="openStep"><div class="num">2</div><h2>Ouvrir depuis l’icône</h2><p>Fermez Safari puis ouvrez <strong>ClairVoyanceMedium.com</strong> depuis l’icône ajoutée à l’écran d’accueil.</p></article>
+    <article class="step" id="notifyStep"><div class="num">3</div><h2>Autoriser les notifications</h2><p>Une fois ouverte depuis l’écran d’accueil, touchez le bouton ci-dessous. iOS affichera sa demande officielle d’autorisation.</p><button class="btn primary" id="notifyBtn" type="button">Activer les notifications</button></article>
+    <article class="step"><div class="num">4</div><h2>Ouvrir le site officiel</h2><p>Votre site reste accessible directement depuis cette application.</p><a class="btn green" href="https://www.clairvoyancemedium.com/">Ouvrir ClairVoyanceMedium.com</a></article>
+  </div>
+  <div class="status" id="status">Vérification de l’installation et des fonctions de notification…</div>
+  <div class="small">Les notifications Web Push nécessitent iOS/iPadOS 16.4 ou une version plus récente.</div>
+</section></main>
+<script>
+(async function(){
+  const status=document.getElementById('status');
+  const installStep=document.getElementById('installStep');
+  const openStep=document.getElementById('openStep');
+  const notifyStep=document.getElementById('notifyStep');
+  const notifyBtn=document.getElementById('notifyBtn');
+  const standalone=window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
+
+  function setStatus(html){status.innerHTML=html;}
+  if('serviceWorker' in navigator){
+    try{await navigator.serviceWorker.register('./sw-ios.js');}
+    catch(e){setStatus('<span class="warn">Le service de notifications n’a pas pu être enregistré. Rechargez cette page.</span>');}
+  }
+  if(standalone){installStep.classList.add('ok');openStep.classList.add('ok');notifyStep.classList.add('active');setStatus('<span class="good">Application ouverte depuis l’écran d’accueil.</span> Vous pouvez maintenant autoriser les notifications.');}
+  else{setStatus('Ouvrez cette page dans Safari, puis utilisez <strong>Partager → Ajouter à l’écran d’accueil</strong>. Ensuite ouvrez l’icône créée.');}
+
+  notifyBtn.addEventListener('click',async()=>{
+    if(!standalone){setStatus('<span class="warn">Ouvrez d’abord l’application depuis son icône sur l’écran d’accueil.</span>');return;}
+    if(!('Notification' in window)){setStatus('<span class="warn">Cette version d’iOS ne fournit pas l’API de notification nécessaire.</span>');return;}
+    try{
+      const permission=await Notification.requestPermission();
+      if(permission==='granted'){
+        notifyStep.classList.add('ok');notifyStep.classList.remove('active');
+        setStatus('<span class="good">Autorisation accordée.</span> La partie iPhone est prête à être reliée au service d’envoi Web Push.');
+      }else if(permission==='denied'){
+        setStatus('<span class="warn">Notifications refusées.</span> Vous pourrez modifier ce choix dans les réglages de notifications de l’iPhone.');
+      }else setStatus('Autorisation non accordée pour le moment.');
+    }catch(e){setStatus('<span class="warn">Impossible d’ouvrir la demande de notification.</span> Vérifiez que l’application a été ouverte depuis l’écran d’accueil.');}
+  });
+})();
+</script>
+</body>
+</html>
