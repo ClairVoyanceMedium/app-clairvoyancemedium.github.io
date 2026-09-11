@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "87958761791",
+    "project_id": "clairvoyancemedium-f2fb0",
+    "storage_bucket": "clairvoyancemedium-f2fb0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:87958761791:android:d30d8414b281e70d2ca38a",
+        "android_client_info": {
+          "package_name": "com.clairvoyancemedium.clairvoyancemedium_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAnUC_H1lW56n8046rjJup7I3bII_ZXeM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
