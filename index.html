@@ -11,6 +11,7 @@
     *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}body{background:radial-gradient(circle at 50% -10%,rgba(215,173,74,.18),transparent 36%),#070707}
     .wrap{min-height:100dvh;display:grid;place-items:center;padding:28px}.card{width:min(760px,100%);border:1px solid var(--line);border-radius:26px;background:linear-gradient(180deg,#151515,#0b0b0b);box-shadow:0 24px 70px rgba(0,0,0,.45);padding:34px;text-align:center}
     .logo{width:92px;height:92px;border-radius:24px;margin:0 auto 20px;display:grid;place-items:center;border:1px solid #725b27;background:linear-gradient(145deg,#0b0b0b,#251d0c);color:var(--gold2);font-weight:800;font-size:25px;letter-spacing:.5px}.eyebrow{color:var(--gold2);font-size:13px;text-transform:uppercase;letter-spacing:1.8px}.card h1{font-size:clamp(28px,6vw,48px);margin:10px 0 12px}.lead{color:var(--muted);line-height:1.6;max-width:620px;margin:0 auto 24px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}.btn{display:flex;align-items:center;justify-content:center;min-height:54px;padding:13px 18px;border-radius:14px;text-decoration:none;font-weight:750;border:1px solid #5d4a22;background:#15120b;color:var(--gold2);cursor:pointer}.btn.primary{background:linear-gradient(135deg,#e2bb5c,#a77b1f);border-color:#dbb354;color:#0b0905}.btn.secondary{background:#101010}.status{margin-top:22px;padding:14px;border:1px solid #2d291f;border-radius:14px;background:#0a0a0a;color:var(--muted);font-size:13px;line-height:1.55}.platform{margin-top:16px;color:var(--green);font-size:12px}.small{margin-top:24px;color:#716d65;font-size:11px}.small a{color:#bfa86d}.install{margin-top:14px;text-align:left;padding:14px 16px;border:1px solid #2d291f;border-radius:14px;background:#0a0a0a;color:#aaa49a;font-size:12px;line-height:1.55}
+    .prep{display:none;margin:18px 0 8px;text-align:left;border:1px solid #765d2b;border-radius:18px;background:linear-gradient(180deg,#18140c,#0d0d0d);padding:18px}.prep.show{display:block}.prep h2{font-size:18px;color:var(--gold2);margin:0 0 8px}.prep p{font-size:13px;line-height:1.55;color:#d2cec5;margin:7px 0}.prep .steps{margin:12px 0 14px;padding-left:20px;color:#d2cec5;font-size:13px;line-height:1.65}.prep .btn{width:100%;margin-top:10px}.prep-note{color:#9f998f;font-size:11px!important}
     .sheet{position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:10000;transform:translateY(130%);opacity:0;transition:.28s ease;pointer-events:none}.sheet.show{transform:translateY(0);opacity:1;pointer-events:auto}.sheet-card{max-width:620px;margin:0 auto;border:1px solid #6f5728;border-radius:20px;background:linear-gradient(180deg,#181818,#0b0b0b);box-shadow:0 18px 60px rgba(0,0,0,.72);padding:18px}.sheet-head{display:flex;gap:12px;align-items:flex-start}.sheet-icon{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:#201907;border:1px solid #685222;color:var(--gold2);font-weight:900}.sheet-title{font-size:17px;font-weight:800;color:var(--gold2);margin:0 0 4px}.sheet-text{font-size:13px;line-height:1.45;color:#d0cbc1;margin:0}.progress{height:5px;border-radius:999px;background:#222;margin:14px 0 12px;overflow:hidden}.progress>i{display:block;height:100%;width:35%;background:linear-gradient(90deg,#8c681d,#f1d176);border-radius:999px;animation:move 1.1s linear infinite}@keyframes move{from{transform:translateX(-120%)}to{transform:translateX(360%)}}.sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.sheet-actions .btn{min-height:46px;font-size:13px}.sheet-close{margin-top:8px;width:100%;border:0;background:transparent;color:#847e74;padding:8px;cursor:pointer}.hidden{display:none!important}
     @media(max-width:600px){.card{padding:26px 18px;border-radius:20px}.actions{grid-template-columns:1fr}.logo{width:78px;height:78px;border-radius:20px}.sheet-actions{grid-template-columns:1fr}}
   </style>
@@ -22,13 +23,27 @@
       <div class="eyebrow">Application officielle</div>
       <h1>ClairVoyanceMedium.com</h1>
       <p class="lead">L’application affiche directement <strong>www.clairvoyancemedium.com</strong>. Le contenu du site reste donc à jour automatiquement dans l’application.</p>
+
+      <section class="prep" id="samsungPrep">
+        <h2>Samsung détecté — préparer l’installation</h2>
+        <p>Pour éviter que Samsung bloque l’application après le téléchargement, faites ceci avant de télécharger :</p>
+        <ol class="steps">
+          <li>Touchez <strong>Ouvrir les paramètres de sécurité</strong>.</li>
+          <li>Dans <strong>Sécurité et confidentialité</strong>, ouvrez <strong>Bloqueur automatique</strong>.</li>
+          <li>Désactivez-le temporairement, puis revenez sur cette page.</li>
+          <li>Touchez ensuite <strong>Télécharger et installer</strong>.</li>
+        </ol>
+        <button class="btn primary" type="button" id="samsungSecurityBtn">Ouvrir les paramètres de sécurité</button>
+        <p class="prep-note">Après l’installation de ClairVoyanceMedium.com, vous pourrez réactiver le Bloqueur automatique.</p>
+      </section>
+
       <div class="actions">
         <a class="btn primary" href="https://github.com/ClairVoyanceMedium/app-clairvoyancemedium.github.io/releases/download/android-latest/ClairVoyanceMedium.apk" id="downloadBtn">Télécharger l’application Android</a>
         <a class="btn secondary" href="https://www.clairvoyancemedium.com/" id="webBtn">Ouvrir la version Web</a>
       </div>
       <div class="platform" id="platform">Détection de votre appareil…</div>
       <div class="status" id="status">La version Android est disponible au téléchargement. Après installation, une icône ClairVoyanceMedium.com apparaît parmi vos applications.</div>
-      <div class="install" id="installHelp"><strong>Android :</strong> après le téléchargement, ouvrez <strong>ClairVoyanceMedium.apk</strong> puis touchez <strong>Installer</strong>. Si Android bloque l’installation, autorisez votre navigateur comme source d’installation puis revenez au fichier APK.</div>
+      <div class="install" id="installHelp"><strong>Android :</strong> après le téléchargement, ouvrez <strong>ClairVoyanceMedium.apk</strong> puis touchez <strong>Installer</strong>. Si Android affiche une demande d’autorisation, touchez <strong>Paramètres</strong>, autorisez cette source, puis revenez à l’installation.</div>
       <div class="small">Site officiel : <a href="https://www.clairvoyancemedium.com/">www.clairvoyancemedium.com</a></div>
     </section>
   </main>
@@ -56,8 +71,8 @@
   const ua=navigator.userAgent||'';
   const android=/Android/i.test(ua);
   const ios=/iPhone|iPad|iPod/i.test(ua) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
-  const samsung=/SamsungBrowser/i.test(ua);
-  const chrome=/Chrome\//i.test(ua) && !samsung && !/EdgA|OPR\//i.test(ua);
+  const samsung=/SamsungBrowser/i.test(ua) || /SM-[A-Z0-9]/i.test(ua);
+  const chrome=/Chrome\//i.test(ua) && !/SamsungBrowser/i.test(ua) && !/EdgA|OPR\//i.test(ua);
   const edge=/EdgA/i.test(ua);
   const firefox=/Firefox\//i.test(ua);
   const platform=document.getElementById('platform');
@@ -70,11 +85,17 @@
   const progress=document.getElementById('progress');
   const settingsBtn=document.getElementById('settingsBtn');
   const sheetClose=document.getElementById('sheetClose');
+  const samsungPrep=document.getElementById('samsungPrep');
+  const samsungSecurityBtn=document.getElementById('samsungSecurityBtn');
   let downloadStartedAt=0;
 
-  function settingsIntent(){
+  function openSecuritySettings(){
+    location.href='intent:#Intent;action=android.settings.SECURITY_SETTINGS;end';
+  }
+
+  function unknownSourcesIntent(){
     let pkg='';
-    if(samsung) pkg='com.sec.android.app.sbrowser';
+    if(/SamsungBrowser/i.test(ua)) pkg='com.sec.android.app.sbrowser';
     else if(chrome) pkg='com.android.chrome';
     else if(edge) pkg='com.microsoft.emmx';
     else if(firefox) pkg='org.mozilla.firefox';
@@ -85,9 +106,9 @@
   function showInstallReady(){
     if(!android || !downloadStartedAt) return;
     progress.classList.add('hidden');
-    sheetTitle.textContent='Prêt pour l’installation';
-    sheetText.innerHTML='Si le téléchargement est terminé, ouvrez la notification ou le fichier <strong>ClairVoyanceMedium.apk</strong>. Android affichera ensuite son bouton officiel <strong>Installer</strong>.';
-    const intent=settingsIntent();
+    sheetTitle.textContent='Téléchargement terminé ?';
+    sheetText.innerHTML='Touchez la notification <strong>Téléchargement terminé</strong> puis <strong>Ouvrir</strong>. Android affichera ensuite son bouton officiel <strong>Installer</strong>.';
+    const intent=unknownSourcesIntent();
     if(intent){
       settingsBtn.classList.remove('hidden');
       settingsBtn.onclick=function(){ location.href=intent; };
@@ -98,9 +119,13 @@
   if(android){
     platform.textContent='Appareil détecté : Android — APK disponible.';
     download.textContent='Télécharger et installer ClairVoyanceMedium';
+
     if(samsung){
-      help.innerHTML='<strong>Samsung Internet :</strong> téléchargez l’APK. Si Samsung bloque l’installation, utilisez le bouton <strong>Autoriser l’installation</strong> qui apparaîtra en bas de cette page, activez <strong>Autoriser depuis cette source</strong>, puis revenez au fichier APK.';
+      samsungPrep.classList.add('show');
+      help.innerHTML='<strong>Samsung :</strong> commencez par désactiver temporairement <strong>Bloqueur automatique</strong> avec le guide ci-dessus. Après le téléchargement, touchez <strong>Ouvrir</strong>, puis <strong>Installer</strong>. Si Samsung demande une autre autorisation de source, acceptez-la dans les paramètres proposés par le téléphone.';
+      samsungSecurityBtn.addEventListener('click',openSecuritySettings);
     }
+
     download.addEventListener('click',function(){
       downloadStartedAt=Date.now();
       sheetTitle.textContent='Téléchargement en cours';
