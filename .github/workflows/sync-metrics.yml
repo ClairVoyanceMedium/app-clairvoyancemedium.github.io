@@ -1,0 +1,39 @@
+name: Sync push metrics
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
+
+permissions:
+  contents: read
+\ njobs:
+  metrics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate secrets
+        env:
+          ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
+        shell: bash
+        run: |
+          test -n "$ONESIGNAL_APP_ID" || (echo 'ONESIGNAL_APP_ID manquant' && exit 1)
+          test -n "$ONESIGNAL_API_KEY" || (echo 'ONESIGNAL_API_KEY manquant' && exit 1)
+
+      - name: Collect OneSignal metrics
+        env:
+          ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
+          METRICS_OUTPUT: metrics-private.json
+        run: python3 scripts/sync_metrics.py
+
+      - name: Upload private metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClairVoyanceMedium-metrics
+          path: metrics-private.json
+          if-no-files-found: error
+          retention-days: 30
