@@ -1,0 +1,111 @@
+name: Build iOS app
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'lib/**'
+      - 'pubspec.yaml'
+      - 'assets/**'
+      - '.github/workflows/build-ios.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-ios:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Create iOS project and decode official icon
+        shell: bash
+        run: |
+          rm -rf .build_ios
+          flutter create --platforms=ios --org com.clairvoyancemedium --project-name clairvoyancemedium_app .build_ios
+          cp pubspec.yaml .build_ios/pubspec.yaml
+          rm -rf .build_ios/lib .build_ios/test
+          cp -R lib .build_ios/lib
+          mkdir -p .build_ios/assets
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, re
+
+          src = Path('assets/app_icon_512.png.b64').read_text(encoding='utf-8')
+          clean = re.sub(r'[^A-Za-z0-9+/=]', '', src)
+          clean = clean.rstrip('=')
+          clean += '=' * (-len(clean) % 4)
+          raw = base64.b64decode(clean, validate=False)
+          if not raw.startswith(b'\xff\xd8\xff'):
+              raise SystemExit('Le fichier du logo ne correspond pas a un JPEG valide')
+          Path('.build_ios/assets/app_icon.jpg').write_bytes(raw)
+          print(f'Logo officiel iOS decode: {len(raw)} octets')
+          PY
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          pbx = Path('.build_ios/ios/Runner.xcodeproj/project.pbxproj')
+          text = pbx.read_text(encoding='utf-8')
+          text = text.replace('com.clairvoyancemedium.clairvoyancemediumApp', 'com.clairvoyancemedium.app')
+          text = text.replace('com.clairvoyancemedium.clairvoyancemedium_app', 'com.clairvoyancemedium.app')
+          pbx.write_text(text, encoding='utf-8')
+          PY
+
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName ClairVoyanceMedium.com" .build_ios/ios/Runner/Info.plist || true
+
+      - name: Install dependencies
+        working-directory: .build_ios
+        shell: bash
+        run: |
+          flutter pub get
+          flutter pub add --dev flutter_launcher_icons
+
+      - name: Generate official iPhone and iPad icons
+        working-directory: .build_ios
+        shell: bash
+        run: |
+          cat >> pubspec.yaml <<'EOF'
+
+          flutter_launcher_icons:
+            android: false
+            ios: true
+            image_path: "assets/app_icon.jpg"
+            remove_alpha_ios: true
+          EOF
+          dart run flutter_launcher_icons
+
+      - name: Check Dart code
+        working-directory: .build_ios
+        run: flutter analyze lib --no-fatal-warnings --no-fatal-infos
+
+      - name: Build iOS without signing
+        working-directory: .build_ios
+        run: flutter build ios --release --no-codesign --build-name=0.1.2 --build-number=${{ github.run_number }}
+
+      - name: Prepare unsigned iOS package for signing
+        shell: bash
+        run: |
+          rm -rf Payload ClairVoyanceMedium-iOS-unsigned.ipa
+          mkdir Payload
+          cp -R .build_ios/build/ios/iphoneos/Runner.app Payload/ClairVoyanceMedium.app
+          zip -qry ClairVoyanceMedium-iOS-unsigned.ipa Payload
+
+      - name: Upload unsigned iOS build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClairVoyanceMedium-iOS-unsigned
+          path: ClairVoyanceMedium-iOS-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30
