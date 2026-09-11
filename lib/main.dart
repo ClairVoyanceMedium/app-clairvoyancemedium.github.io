@@ -193,10 +193,10 @@ class _WebsiteShellState extends State<WebsiteShell> {
     if (accepted == true) {
       await OneSignal.Notifications.requestPermission(true);
       OneSignal.User.trackEvent('push_permission_prompted');
-      OneSignal.User.addTag(
-        'push_permission',
-        OneSignal.Notifications.permission ? 'granted' : 'not_granted',
-      );
+      OneSignal.User.addTags({
+        'push_permission':
+            OneSignal.Notifications.permission ? 'granted' : 'not_granted',
+      });
     }
   }
 
