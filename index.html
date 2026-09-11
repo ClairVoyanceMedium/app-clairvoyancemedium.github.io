@@ -39,13 +39,14 @@
   </section>
 
   <section class="guide" id="iosGuide">
-    <div class="guide-head"><strong>Installation iPhone / iPad guidée</strong><span>La même application Flutter et le même logo sont utilisés. Apple impose cependant sa propre signature avant qu’un iPhone puisse l’installer.</span></div>
+    <div class="guide-head"><strong>Installation iPhone / iPad sans compte développeur</strong><span>Cette méthode installe une icône ClairVoyanceMedium.com sur l’écran d’accueil et ouvre le site en plein écran, sans barre d’adresse Safari.</span></div>
     <div class="steps">
-      <article class="step active"><div class="num">1</div><h2>Version iOS native préparée</h2><p>La version iPhone/iPad est générée séparément de l’APK Android, avec le même site, le même nom et le même logo.</p><div class="hint">Un fichier Android <strong>.apk</strong> ne peut jamais être installé sur un iPhone. iOS utilise une application signée par Apple.</div></article>
-      <article class="step active"><div class="num">2</div><h2>Signature et distribution Apple</h2><p>Apple exige un certificat et un profil de distribution avant d’autoriser l’installation sur un vrai iPhone ou iPad.</p><button class="btn primary" type="button" id="iosWaitingBtn">Voir ce qu’il reste à faire</button></article>
-      <article class="step"><div class="num">3</div><h2>Installer sur l’iPhone ou l’iPad</h2><p>Dès que la version est signée, ce bouton deviendra le bouton d’installation officiel Apple. L’utilisateur n’aura pas à télécharger un APK.</p><button class="btn disabled" type="button" disabled>Installation Apple — en attente de signature</button></article>
-      <article class="step"><div class="num">4</div><h2>Ouvrir l’application</h2><p>Après l’installation Apple, l’icône <strong>ClairVoyanceMedium.com</strong> apparaîtra sur l’appareil. Un appui ouvrira directement le site dans l’application.</p></article>
+      <article class="step active" id="iosStep1"><div class="num">1</div><h2>Utiliser Safari</h2><p>Ouvrez cette page avec <strong>Safari</strong> sur l’iPhone ou l’iPad. Apple autorise le téléchargement manuel d’un profil de configuration depuis le Web.</p><div class="hint">Si vous êtes déjà dans Safari, passez directement à l’étape 2.</div><button class="btn green" type="button" id="iosSafariBtn">Je suis dans Safari</button></article>
+      <article class="step" id="iosStep2"><div class="num">2</div><h2>Télécharger le profil ClairVoyanceMedium</h2><p>Le profil contient uniquement le raccourci plein écran vers <strong>www.clairvoyancemedium.com</strong> et votre icône officielle.</p><a class="btn primary" id="iosProfileBtn" href="ClairVoyanceMedium.mobileconfig">Télécharger le profil iPhone / iPad</a><div class="hint">Après le téléchargement, iOS affiche <strong>« Profil téléchargé »</strong>. Installez-le rapidement : iOS supprime un profil non installé après quelques minutes.</div></article>
+      <article class="step" id="iosStep3"><div class="num">3</div><h2>Installer dans Réglages</h2><p>Ouvrez <strong>Réglages</strong> → <strong>Profil téléchargé</strong> → <strong>Installer</strong> en haut à droite. Saisissez le code de l’iPhone si demandé, puis touchez encore <strong>Installer</strong> et <strong>OK</strong>.</p><div class="hint">Si « Profil téléchargé » n’apparaît pas, allez dans <strong>Réglages → Général → VPN et gestion de l’appareil</strong>.</div><button class="btn green" type="button" id="iosInstalledBtn">J’ai installé le profil</button></article>
+      <article class="step" id="iosStep4"><div class="num">4</div><h2>Ouvrir ClairVoyanceMedium.com</h2><p>L’icône officielle apparaît sur l’écran d’accueil. Touchez-la : le site s’ouvre comme une app Web en plein écran.</p></article>
     </div>
+    <div class="success" id="iosSuccessBox"><strong>Installation iPhone / iPad terminée</strong><p>L’icône ClairVoyanceMedium.com est maintenant installée. Cette méthode n’a pas besoin de compte Apple Developer et ne dépend pas d’une signature IPA de 7 jours.</p></div>
   </section>
 
   <div class="platform" id="platform">Détection de votre appareil…</div>
@@ -62,6 +63,7 @@
   const ua=navigator.userAgent||'';
   const android=/Android/i.test(ua);
   const ios=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const safari=ios&&/Safari/i.test(ua)&&!/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
   const samsung=android&&(/SamsungBrowser/i.test(ua)||/SM-[A-Z0-9]/i.test(ua));
   const samsungBrowser=/SamsungBrowser/i.test(ua);
   const chrome=/Chrome\//i.test(ua)&&!/SamsungBrowser|EdgA|OPR\//i.test(ua);
@@ -94,8 +96,16 @@
     if(localStorage.getItem('cvm_download_started')==='1')activate(stepInstall);
     if(localStorage.getItem('cvm_installed_seen')==='1')successBox.classList.add('show');
   }else if(ios){
-    iosGuide.classList.add('show');platform.textContent='iPhone / iPad détecté — parcours iOS affiché.';
-    document.getElementById('iosWaitingBtn').addEventListener('click',()=>showBottom('Étape Apple obligatoire','Le code iOS et le logo peuvent être préparés automatiquement sur GitHub, mais Apple exige ensuite une <strong>signature de distribution</strong> liée à un compte Apple Developer. Sans cette signature, un vrai iPhone refuse l’installation. Dès que la signature Apple est configurée, cette page pourra afficher le bouton d’installation officiel.',false));
+    iosGuide.classList.add('show');platform.textContent=safari?'iPhone / iPad détecté — Safari prêt pour l’installation.':'iPhone / iPad détecté — ouvrez cette page dans Safari pour installer.';
+    const i1=document.getElementById('iosStep1'),i2=document.getElementById('iosStep2'),i3=document.getElementById('iosStep3'),i4=document.getElementById('iosStep4'),iosSuccess=document.getElementById('iosSuccessBox');
+    function iosActivate(el){[i1,i2,i3,i4].forEach(x=>x.classList.remove('active'));if(el)el.classList.add('active')}
+    function safariReady(){i1.classList.add('done');iosActivate(i2);showBottom('Étape suivante','Touchez maintenant <strong>Télécharger le profil iPhone / iPad</strong>. Après le téléchargement, ouvrez immédiatement <strong>Réglages</strong>.',false)}
+    document.getElementById('iosSafariBtn').addEventListener('click',safariReady);
+    document.getElementById('iosProfileBtn').addEventListener('click',()=>{i1.classList.add('done');i2.classList.add('done');iosActivate(i3);localStorage.setItem('cvm_ios_profile_downloaded','1');showBottom('Profil téléchargé','Ouvrez maintenant <strong>Réglages → Profil téléchargé → Installer</strong>. Si le bouton n’apparaît pas, allez dans <strong>Général → VPN et gestion de l’appareil</strong>.',false)});
+    document.getElementById('iosInstalledBtn').addEventListener('click',()=>{i1.classList.add('done');i2.classList.add('done');i3.classList.add('done');i4.classList.add('done');iosActivate(null);iosSuccess.classList.add('show');localStorage.setItem('cvm_ios_installed','1');showBottom('Installation terminée','Revenez à l’écran d’accueil et touchez l’icône <strong>ClairVoyanceMedium.com</strong>.',false);iosSuccess.scrollIntoView({behavior:'smooth',block:'center'})});
+    if(safari)safariReady();
+    if(localStorage.getItem('cvm_ios_profile_downloaded')==='1'){i1.classList.add('done');i2.classList.add('done');iosActivate(i3)}
+    if(localStorage.getItem('cvm_ios_installed')==='1')iosSuccess.classList.add('show');
   }else{
     platform.textContent='Ouvrez cette page depuis Android, iPhone ou iPad pour afficher le parcours correspondant.';
   }
