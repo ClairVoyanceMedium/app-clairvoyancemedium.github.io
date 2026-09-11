@@ -27,9 +27,9 @@ HEADERS = {
 }
 
 
-def request_json(url, method='GET', payload=None):
+def request_json(url, method='GET', payload=None, headers=None):
     data = None if payload is None else json.dumps(payload).encode('utf-8')
-    req = urllib.request.Request(url, data=data, headers=HEADERS, method=method)
+    req = urllib.request.Request(url, data=data, headers=headers or HEADERS, method=method)
     try:
         with urllib.request.urlopen(req, timeout=60) as r:
             return json.loads(r.read().decode('utf-8'))
@@ -47,12 +47,20 @@ def unix_or_iso(value):
             number /= 1000
         return datetime.fromtimestamp(number, tz=timezone.utc).isoformat()
     except (TypeError, ValueError, OverflowError):
-        text = str(value)
-        return text
+        return str(value)
 
 
 def is_truthy(value):
     return str(value).strip().lower() in {'1', 'true', 't', 'yes', 'y'}
+
+
+def parse_dt(value):
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+    except ValueError:
+        return None
 
 
 def platform_name(row):
@@ -70,8 +78,8 @@ def platform_name(row):
     }.get(dtype, f'Autre ({dtype or "inconnu"})')
 
 
-# 1) Export des abonnements. Aucun token push, IP ou identifiant brut n'est
-# conservé dans l'artefact final.
+# 1) Export des abonnements OneSignal. Les tokens push, IP et identifiants
+# personnels bruts ne sont jamais conservés dans l'artefact du tableau de bord.
 export = request_json(
     f'https://api.onesignal.com/players/csv_export?app_id={urllib.parse.quote(APP_ID)}',
     method='POST',
@@ -130,7 +138,7 @@ for row in rows:
         'notification_types': row.get('notification_types') or '',
     })
 
-# 2) Messages récents et métriques d'envoi.
+# 2) Notifications récentes et performances.
 messages_response = request_json(
     f'https://api.onesignal.com/notifications?app_id={urllib.parse.quote(APP_ID)}&limit=50&offset=0'
 )
@@ -153,22 +161,52 @@ for msg in messages_response.get('notifications', []):
         'url': msg.get('url') or msg.get('web_url') or msg.get('app_url') or '',
     })
 
+# 3) Téléchargements du dernier APK GitHub Release. Un téléchargement n'est
+# pas automatiquement une installation ; cette métrique reste donc distincte.
+apk_downloads = 0
+apk_release_updated_at = None
+apk_size = None
+try:
+    release = request_json(
+        'https://api.github.com/repos/ClairVoyanceMedium/app-clairvoyancemedium.github.io/releases/tags/android-latest',
+        headers={'Accept': 'application/vnd.github+json', 'User-Agent': 'ClairVoyanceMedium-metrics'},
+    )
+    apk_release_updated_at = release.get('updated_at')
+    for asset in release.get('assets', []):
+        if asset.get('name') == 'ClairVoyanceMedium.apk':
+            apk_downloads = int(asset.get('download_count') or 0)
+            apk_size = int(asset.get('size') or 0)
+            break
+except Exception as exc:
+    print(f'Avertissement: métrique téléchargement APK indisponible: {exc}', file=sys.stderr)
+
 now = datetime.now(timezone.utc)
 new_24h = 0
+active_7d = 0
+active_30d = 0
 for s in subscriptions:
-    created = s.get('created_at')
-    if not created:
-        continue
-    try:
-        dt = datetime.fromisoformat(created.replace('Z', '+00:00'))
-        if (now - dt).total_seconds() <= 86400:
-            new_24h += 1
-    except ValueError:
-        pass
+    created = parse_dt(s.get('created_at'))
+    last_active = parse_dt(s.get('last_active'))
+    if created and (now - created).total_seconds() <= 86400:
+        new_24h += 1
+    if last_active and s['status'] == 'abonné':
+        age = (now - last_active).total_seconds()
+        if age <= 7 * 86400:
+            active_7d += 1
+        if age <= 30 * 86400:
+            active_30d += 1
 
 platform_counts = Counter(s['platform'] for s in subscriptions if s['status'] == 'abonné')
+country_counts = Counter(s['country'] or 'Inconnu' for s in subscriptions if s['status'] == 'abonné')
+version_counts = Counter(s['app_version'] or 'Inconnue' for s in subscriptions if s['status'] == 'abonné')
 subscribed = sum(1 for s in subscriptions if s['status'] == 'abonné')
 unsubscribed = len(subscriptions) - subscribed
+sessions_total = sum(s['session_count'] for s in subscriptions)
+playtime_total = sum(s['playtime_seconds'] for s in subscriptions)
+notifications_sent = sum(m['successful'] for m in messages)
+notifications_received = sum(m['received'] for m in messages)
+notifications_clicked = sum(m['clicked'] for m in messages)
+notifications_failed = sum(m['failed'] + m['errored'] for m in messages)
 
 payload = {
     'generated_at': now.isoformat(),
@@ -178,16 +216,29 @@ payload = {
         'subscribed': subscribed,
         'unsubscribed': unsubscribed,
         'new_last_24h': new_24h,
+        'active_7d': active_7d,
+        'active_30d': active_30d,
         'android_subscribed': platform_counts.get('Android', 0),
         'ios_web_subscribed': platform_counts.get('iOS / iPadOS Web Push', 0) + platform_counts.get('Safari Web Push', 0),
         'web_chrome_subscribed': platform_counts.get('Web Chrome', 0),
+        'sessions_total': sessions_total,
+        'playtime_total_seconds': playtime_total,
+        'apk_downloads': apk_downloads,
+        'apk_release_updated_at': apk_release_updated_at,
+        'apk_size_bytes': apk_size,
         'messages_total_api_visible': int(messages_response.get('total_count') or len(messages)),
         'messages_loaded': len(messages),
+        'notifications_sent_recent': notifications_sent,
+        'notifications_received_recent': notifications_received,
+        'notifications_clicked_recent': notifications_clicked,
+        'notifications_failed_recent': notifications_failed,
     },
     'platform_counts': dict(platform_counts),
+    'country_counts': dict(country_counts.most_common(50)),
+    'version_counts': dict(version_counts.most_common(50)),
     'subscriptions': sorted(subscriptions, key=lambda x: x.get('created_at') or '', reverse=True),
     'messages': messages,
 }
 
 OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-print(f'Métriques écrites dans {OUT} : {subscribed} abonnés actifs, {unsubscribed} désabonnés.')
+print(f'Métriques écrites dans {OUT} : {subscribed} abonnés actifs, {unsubscribed} désabonnés, {apk_downloads} téléchargements APK.')
