@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#080808">
-  <title>Application ClairVoyanceMedium.com</title>
+  <title>Télécharger l’application ClairVoyanceMedium.com</title>
   <meta name="description" content="Application officielle ClairVoyanceMedium.com pour Android, iPhone et tablettes.">
   <style>
-    :root{--bg:#070707;--panel:#111;--gold:#d7ad4a;--gold2:#f3d987;--text:#f5f2ea;--muted:#aaa49a;--line:#332b1c}
+    :root{--bg:#070707;--panel:#111;--gold:#d7ad4a;--gold2:#f3d987;--text:#f5f2ea;--muted:#aaa49a;--line:#332b1c;--green:#66d69a}
     *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}body{background:radial-gradient(circle at 50% -10%,rgba(215,173,74,.18),transparent 36%),#070707}
     .wrap{min-height:100dvh;display:grid;place-items:center;padding:28px}.card{width:min(760px,100%);border:1px solid var(--line);border-radius:26px;background:linear-gradient(180deg,#151515,#0b0b0b);box-shadow:0 24px 70px rgba(0,0,0,.45);padding:34px;text-align:center}
-    .logo{width:92px;height:92px;border-radius:24px;margin:0 auto 20px;display:grid;place-items:center;border:1px solid #725b27;background:linear-gradient(145deg,#0b0b0b,#251d0c);color:var(--gold2);font-weight:800;font-size:25px;letter-spacing:.5px}.eyebrow{color:var(--gold2);font-size:13px;text-transform:uppercase;letter-spacing:1.8px}.card h1{font-size:clamp(28px,6vw,48px);margin:10px 0 12px}.lead{color:var(--muted);line-height:1.6;max-width:620px;margin:0 auto 24px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}.btn{display:flex;align-items:center;justify-content:center;min-height:52px;padding:13px 18px;border-radius:14px;text-decoration:none;font-weight:750;border:1px solid #5d4a22;background:#15120b;color:var(--gold2)}.btn.primary{background:linear-gradient(135deg,#e2bb5c,#a77b1f);border-color:#dbb354;color:#0b0905}.btn.disabled{opacity:.48;pointer-events:none}.status{margin-top:22px;padding:14px;border:1px solid #2d291f;border-radius:14px;background:#0a0a0a;color:var(--muted);font-size:13px;line-height:1.5}.platform{margin-top:16px;color:#777;font-size:12px}.small{margin-top:24px;color:#716d65;font-size:11px}.small a{color:#bfa86d}.only-one{grid-template-columns:1fr}
+    .logo{width:92px;height:92px;border-radius:24px;margin:0 auto 20px;display:grid;place-items:center;border:1px solid #725b27;background:linear-gradient(145deg,#0b0b0b,#251d0c);color:var(--gold2);font-weight:800;font-size:25px;letter-spacing:.5px}.eyebrow{color:var(--gold2);font-size:13px;text-transform:uppercase;letter-spacing:1.8px}.card h1{font-size:clamp(28px,6vw,48px);margin:10px 0 12px}.lead{color:var(--muted);line-height:1.6;max-width:620px;margin:0 auto 24px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}.btn{display:flex;align-items:center;justify-content:center;min-height:54px;padding:13px 18px;border-radius:14px;text-decoration:none;font-weight:750;border:1px solid #5d4a22;background:#15120b;color:var(--gold2)}.btn.primary{background:linear-gradient(135deg,#e2bb5c,#a77b1f);border-color:#dbb354;color:#0b0905}.btn.secondary{background:#101010}.status{margin-top:22px;padding:14px;border:1px solid #2d291f;border-radius:14px;background:#0a0a0a;color:var(--muted);font-size:13px;line-height:1.55}.platform{margin-top:16px;color:var(--green);font-size:12px}.small{margin-top:24px;color:#716d65;font-size:11px}.small a{color:#bfa86d}.install{margin-top:14px;text-align:left;padding:14px 16px;border:1px solid #2d291f;border-radius:14px;background:#0a0a0a;color:#aaa49a;font-size:12px;line-height:1.55}
     @media(max-width:600px){.card{padding:26px 18px;border-radius:20px}.actions{grid-template-columns:1fr}.logo{width:78px;height:78px;border-radius:20px}}
   </style>
 </head>
@@ -20,15 +20,18 @@
       <div class="logo">CV</div>
       <div class="eyebrow">Application officielle</div>
       <h1>ClairVoyanceMedium.com</h1>
-      <p class="lead">L’application reprend directement la version en ligne de <strong>www.clairvoyancemedium.com</strong>. Le contenu reste donc à jour automatiquement, avec la même navigation, le panier, les paiements et le chat.</p>
+      <p class="lead">L’application affiche directement <strong>www.clairvoyancemedium.com</strong>. Le contenu du site reste donc à jour automatiquement dans l’application.</p>
 
-      <div class="actions" id="actions">
-        <a class="btn primary" href="https://www.clairvoyancemedium.com/" id="webBtn">Ouvrir maintenant</a>
-        <a class="btn disabled" href="#" id="downloadBtn" aria-disabled="true">Application en préparation</a>
+      <div class="actions">
+        <a class="btn primary" href="https://github.com/ClairVoyanceMedium/app-clairvoyancemedium.github.io/releases/download/android-latest/ClairVoyanceMedium.apk" id="downloadBtn">Télécharger l’application Android</a>
+        <a class="btn secondary" href="https://www.clairvoyancemedium.com/" id="webBtn">Ouvrir la version Web</a>
       </div>
 
-      <div class="status" id="status">Version native en cours de construction : Android, tablettes Android, iPhone et iPad. Le cœur de l’application charge directement le site officiel dans une WebView native afin de conserver la session, les cookies, Stripe, PayPal et tawk.to.</div>
-      <div class="platform" id="platform"></div>
+      <div class="platform" id="platform">Détection de votre appareil…</div>
+      <div class="status" id="status">Le fichier Android est généré automatiquement par GitHub. Dès que la première compilation est terminée, le bouton de téléchargement récupère directement le dernier APK disponible.</div>
+
+      <div class="install" id="installHelp"><strong>Android :</strong> après le téléchargement, ouvrez le fichier <strong>ClairVoyanceMedium.apk</strong>. Android peut vous demander d’autoriser l’installation depuis votre navigateur. Cette autorisation concerne uniquement l’installation directe hors Google Play.</div>
+
       <div class="small">Site officiel : <a href="https://www.clairvoyancemedium.com/">www.clairvoyancemedium.com</a></div>
     </section>
   </main>
@@ -38,9 +41,21 @@
   const android=/Android/i.test(ua);
   const ios=/iPhone|iPad|iPod/i.test(ua) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
   const platform=document.getElementById('platform');
-  if(android) platform.textContent='Appareil détecté : Android';
-  else if(ios) platform.textContent='Appareil détecté : iPhone / iPad';
-  else platform.textContent='Vous pourrez utiliser ce même lien sur Android, iPhone et tablette.';
+  const download=document.getElementById('downloadBtn');
+  const status=document.getElementById('status');
+  const help=document.getElementById('installHelp');
+
+  if(android){
+    platform.textContent='Appareil détecté : Android — téléchargement APK disponible.';
+    download.textContent='Télécharger ClairVoyanceMedium sur Android';
+  } else if(ios){
+    platform.textContent='Appareil détecté : iPhone / iPad.';
+    download.textContent='Version Android (.APK)';
+    status.textContent='Sur iPhone et iPad, une application native installable nécessite la signature et la distribution autorisées par Apple. En attendant cette version, la version Web reste accessible.';
+    help.innerHTML='<strong>iPhone / iPad :</strong> la version Apple sera ajoutée sur ce même lien dès qu’elle sera signée et distribuable selon les règles Apple.';
+  } else {
+    platform.textContent='Téléchargement Android disponible. La version Apple sera ajoutée sur cette même page.';
+  }
 })();
 </script>
 </body>
