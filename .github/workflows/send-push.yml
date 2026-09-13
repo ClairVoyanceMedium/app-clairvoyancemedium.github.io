@@ -44,16 +44,16 @@ jobs:
       - name: Validate secrets
         env:
           ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
-          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY || secrets.ONESIGNAL_APP_KEY }}
         shell: bash
         run: |
           test -n "$ONESIGNAL_APP_ID" || (echo 'ONESIGNAL_APP_ID manquant' && exit 1)
-          test -n "$ONESIGNAL_API_KEY" || (echo 'ONESIGNAL_API_KEY manquant' && exit 1)
+          test -n "$ONESIGNAL_API_KEY" || (echo 'Clé API OneSignal manquante : ONESIGNAL_API_KEY ou ONESIGNAL_APP_KEY' && exit 1)
 
       - name: Send notification with OneSignal
         env:
           ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
-          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY || secrets.ONESIGNAL_APP_KEY }}
           PUSH_TITLE: ${{ inputs.title }}
           PUSH_MESSAGE: ${{ inputs.message }}
           PUSH_URL: ${{ inputs.url }}
