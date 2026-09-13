@@ -18,17 +18,17 @@ jobs:
       - name: Check OneSignal configuration
         env:
           ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
-          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY || secrets.ONESIGNAL_APP_KEY }}
         shell: bash
         run: |
           if [ -z "$ONESIGNAL_APP_ID" ]; then echo '::warning::ONESIGNAL_APP_ID manquant'; fi
-          if [ -z "$ONESIGNAL_API_KEY" ]; then echo '::warning::ONESIGNAL_API_KEY manquant'; fi
+          if [ -z "$ONESIGNAL_API_KEY" ]; then echo '::warning::Clé API OneSignal manquante : ONESIGNAL_API_KEY ou ONESIGNAL_APP_KEY'; fi
           echo 'La synchronisation continue afin de produire au minimum les métriques GitHub disponibles.'
 
       - name: Collect metrics
         env:
           ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
-          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY || secrets.ONESIGNAL_APP_KEY }}
           METRICS_OUTPUT: metrics-private.json
         run: python3 scripts/sync_metrics.py
 
