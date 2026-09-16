@@ -7,6 +7,10 @@ on:
       - main
     paths:
       - '.github/workflows/build-android-playstore.yml'
+      - 'playstore/**'
+      - 'assets/app_icon_512.png.b64'
+      - 'pubspec.yaml'
+      - 'firebase/google-services.json'
 
 permissions:
   contents: read
@@ -54,6 +58,7 @@ jobs:
           cp pubspec.yaml .build_play/pubspec.yaml
           rm -rf .build_play/lib .build_play/test
           cp -R lib .build_play/lib
+          cp playstore/main.dart .build_play/lib/main.dart
           mkdir -p .build_play/assets
           cp firebase/google-services.json .build_play/android/app/google-services.json
 
@@ -67,6 +72,7 @@ jobs:
           if package_name != expected:
               raise SystemExit('Package Firebase inattendu: ' + package_name)
 
+          # Logo officiel utilisé à la fois pour l'icône et pour l'écran de démarrage.
           icon_src = Path('assets/app_icon_512.png.b64').read_text(encoding='utf-8')
           clean = re.sub(r'[^A-Za-z0-9+/=]', '', icon_src).rstrip('=')
           clean += '=' * (-len(clean) % 4)
@@ -75,11 +81,12 @@ jobs:
               raise SystemExit('Logo officiel invalide')
           Path('.build_play/assets/app_icon.jpg').write_bytes(raw)
 
-          # La copie Play Store est fonctionnellement identique à l'APK directe.
-          # Seule la source de distribution est marquée pour les statistiques privées.
-          main = Path('.build_play/lib/main.dart')
-          s = main.read_text(encoding='utf-8').replace("'direct_apk'", "'play_store'")
-          main.write_text(s, encoding='utf-8')
+          pubspec = Path('.build_play/pubspec.yaml')
+          s = pubspec.read_text(encoding='utf-8')
+          marker = '  uses-material-design: true'
+          if 'assets/app_icon.jpg' not in s:
+              s = s.replace(marker, marker + '\n  assets:\n    - assets/app_icon.jpg', 1)
+          pubspec.write_text(s, encoding='utf-8')
 
           gradle = Path('.build_play/android/app/build.gradle.kts')
           s = gradle.read_text(encoding='utf-8')
@@ -93,6 +100,17 @@ jobs:
           if 'android.permission.INTERNET' not in s:
               s = s.replace('<application', '<uses-permission android:name="android.permission.INTERNET" />\n    <application', 1)
           manifest.write_text(s, encoding='utf-8')
+
+          # Evite tout flash blanc avant l'écran noir/or Flutter.
+          for rel in (
+              'android/app/src/main/res/drawable/launch_background.xml',
+              'android/app/src/main/res/drawable-v21/launch_background.xml',
+          ):
+              p = Path('.build_play') / rel
+              if p.exists():
+                  t = p.read_text(encoding='utf-8')
+                  t = t.replace('@android:color/white', '@android:color/black')
+                  p.write_text(t, encoding='utf-8')
           PY
 
       - name: Configure Firebase and permanent signing
