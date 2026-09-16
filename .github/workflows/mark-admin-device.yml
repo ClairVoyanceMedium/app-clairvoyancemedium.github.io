@@ -2,6 +2,26 @@ name: Mark admin device
 
 on:
   workflow_dispatch:
+    inputs:
+      subscription_id:
+        description: 'Identifiant OneSignal exact du nouveau téléphone (méthode recommandée)'
+        required: false
+        type: string
+      device_model:
+        description: 'Modèle du téléphone si aucun subscription_id n’est fourni'
+        required: false
+        default: 'SM-F971B'
+        type: string
+      country:
+        description: 'Pays ISO du téléphone administrateur'
+        required: false
+        default: 'FR'
+        type: string
+      timezone:
+        description: 'Fuseau horaire du téléphone administrateur'
+        required: false
+        default: 'Europe/Paris'
+        type: string
   push:
     branches:
       - main
@@ -28,12 +48,13 @@ jobs:
           test -n "$ONESIGNAL_APP_ID" || { echo '::error::ONESIGNAL_APP_ID manquant'; exit 1; }
           test -n "$ONESIGNAL_API_KEY" || { echo '::error::Clé API OneSignal manquante'; exit 1; }
 
-      - name: Mark current administrator device
+      - name: Mark administrator device
         env:
           ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
           ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY || secrets.ONESIGNAL_APP_KEY }}
           ADMIN_EXTERNAL_ID: cvm_admin_frederick
-          ADMIN_DEVICE_MODEL: SM-F971B
-          ADMIN_COUNTRY: FR
-          ADMIN_TIMEZONE: Europe/Paris
+          ADMIN_SUBSCRIPTION_ID: ${{ inputs.subscription_id || '' }}
+          ADMIN_DEVICE_MODEL: ${{ inputs.device_model || 'SM-F971B' }}
+          ADMIN_COUNTRY: ${{ inputs.country || 'FR' }}
+          ADMIN_TIMEZONE: ${{ inputs.timezone || 'Europe/Paris' }}
         run: python3 scripts/mark_admin_device.py
