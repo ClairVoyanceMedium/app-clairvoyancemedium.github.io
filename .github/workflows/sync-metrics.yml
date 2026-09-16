@@ -3,12 +3,13 @@ name: Sync push metrics
 on:
   workflow_dispatch:
   schedule:
-    - cron: '17 * * * *'
+    - cron: '*/10 * * * *'
   push:
     branches:
       - main
     paths:
       - 'scripts/sync_metrics.py'
+      - 'scripts/notify_new_installs.py'
       - '.github/workflows/sync-metrics.yml'
 
 permissions:
@@ -35,8 +36,22 @@ jobs:
         env:
           ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
           ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY || secrets.ONESIGNAL_APP_KEY }}
+          ADMIN_EXTERNAL_ID: cvm_admin_frederick
+          INSTALL_TRACKING_START: '2026-09-16T15:20:00Z'
           METRICS_OUTPUT: metrics-private.json
         run: python3 scripts/sync_metrics.py
+
+      - name: Detect new installations and alert administrator
+        continue-on-error: true
+        env:
+          ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY || secrets.ONESIGNAL_APP_KEY }}
+          ADMIN_EXTERNAL_ID: cvm_admin_frederick
+          INSTALL_EVENTS_OUTPUT: install-events-private.json
+          ADMIN_DASHBOARD_URL: https://clairvoyancemedium.github.io/app-clairvoyancemedium.github.io/admin.html
+          TRACKING_START: '2026-09-16T15:20:00Z'
+          INSTALL_ALERT_LOOKBACK_HOURS: '168'
+        run: python3 scripts/notify_new_installs.py
 
       - name: Upload private metrics artifact
         uses: actions/upload-artifact@v4
@@ -44,4 +59,13 @@ jobs:
           name: ClairVoyanceMedium-metrics
           path: metrics-private.json
           if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload private installation feed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CVM-install-events
+          path: install-events-private.json
+          if-no-files-found: warn
           retention-days: 30
