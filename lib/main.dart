@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
@@ -34,6 +35,55 @@ void _initPushInfrastructure() {
   // OneSignal suit automatiquement les sessions, la version de l'appareil,
   // le système, la version de l'application et l'état de l'abonnement.
   OneSignal.User.trackEvent('app_open');
+
+  // Enregistre une seule fois une première installation technique et anonyme.
+  // Aucune permission de localisation GPS n'est demandée ici.
+  _registerFirstInstallTelemetry(platform);
+}
+
+Future<void> _registerFirstInstallTelemetry(String platform) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+
+    var installId = prefs.getString('cvm_install_id');
+    if (installId == null || installId.isEmpty) {
+      final random = Random.secure();
+      installId = [
+        DateTime.now().microsecondsSinceEpoch.toRadixString(36),
+        random.nextInt(1 << 30).toRadixString(36),
+        random.nextInt(1 << 30).toRadixString(36),
+      ].join();
+      await prefs.setString('cvm_install_id', installId);
+    }
+
+    var firstInstallTs = prefs.getInt('cvm_first_install_ts');
+    if (firstInstallTs == null || firstInstallTs <= 0) {
+      firstInstallTs = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+      await prefs.setInt('cvm_first_install_ts', firstInstallTs);
+    }
+
+    OneSignal.User.addTags({
+      'install_id': installId,
+      'first_install_ts': firstInstallTs.toString(),
+      'install_source': Platform.isAndroid
+          ? 'direct_apk'
+          : Platform.isIOS
+              ? 'native_ios'
+              : 'native',
+      'device_locale': Platform.localeName,
+      'tz_offset_min': DateTime.now().timeZoneOffset.inMinutes.toString(),
+      'platform': platform,
+    });
+
+    final eventAlreadySent =
+        prefs.getBool('cvm_first_install_event_sent') ?? false;
+    if (!eventAlreadySent) {
+      OneSignal.User.trackEvent('first_install');
+      await prefs.setBool('cvm_first_install_event_sent', true);
+    }
+  } catch (_) {
+    // La télémétrie ne doit jamais empêcher l'application de démarrer.
+  }
 }
 
 class ClairVoyanceMediumApp extends StatelessWidget {
