@@ -1,0 +1,97 @@
+name: Build Google Play AAB
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-playstore:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Prepare isolated Play Store source
+        shell: bash
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          test -n "$ANDROID_KEYSTORE_PASSWORD"
+          rm -rf .build_play
+          flutter create --platforms=android --org com.clairvoyancemedium --project-name clairvoyancemedium_app .build_play
+          cp pubspec.yaml .build_play/pubspec.yaml
+          rm -rf .build_play/lib .build_play/test
+          cp -R lib .build_play/lib
+          cp firebase/google-services.json .build_play/android/app/google-services.json
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('.build_play/lib/main.dart')
+          s=p.read_text(encoding='utf-8').replace("'direct_apk'", "'play_store'")
+          p.write_text(s, encoding='utf-8')
+          g=Path('.build_play/android/app/build.gradle.kts')
+          s=g.read_text(encoding='utf-8').replace('compileSdk = flutter.compileSdkVersion','compileSdk = 36').replace('targetSdk = flutter.targetSdkVersion','targetSdk = 36')
+          g.write_text(s, encoding='utf-8')
+          m=Path('.build_play/android/app/src/main/AndroidManifest.xml')
+          s=m.read_text(encoding='utf-8').replace('android:label="clairvoyancemedium_app"','android:label="ClairVoyanceMedium.com"')
+          if 'android.permission.INTERNET' not in s:s=s.replace('<application','<uses-permission android:name="android.permission.INTERNET" />\n    <application',1)
+          m.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Configure Firebase and permanent signing
+        shell: bash
+        run: |
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > .build_play/android/app/clairvoyancemedium-release.jks
+          cat > .build_play/android/key.properties <<EOF
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyPassword=$ANDROID_KEYSTORE_PASSWORD
+          keyAlias=clairvoyancemedium
+          storeFile=clairvoyancemedium-release.jks
+          EOF
+          python3 - <<'PY'
+          from pathlib import Path
+          settings=Path('.build_play/android/settings.gradle.kts'); app=Path('.build_play/android/app/build.gradle.kts')
+          s=settings.read_text(encoding='utf-8'); marker='id("com.android.application")'
+          if 'com.google.gms.google-services' not in s:s=s.replace(marker,'id("com.google.gms.google-services") version "4.4.4" apply false\n    '+marker,1)
+          settings.write_text(s,encoding='utf-8')
+          s=app.read_text(encoding='utf-8')
+          if 'com.google.gms.google-services' not in s:s=s.replace(marker,marker+'\n    id("com.google.gms.google-services")',1)
+          s='import java.util.Properties\nimport java.io.FileInputStream\n\n'+s
+          pre='val keystoreProperties = Properties()\nval keystorePropertiesFile = rootProject.file("key.properties")\nkeystoreProperties.load(FileInputStream(keystorePropertiesFile))\n\n'
+          s=s.replace('android {',pre+'android {',1)
+          block='''    signingConfigs {\n        create("release") {\n            keyAlias = keystoreProperties["keyAlias"] as String\n            keyPassword = keystoreProperties["keyPassword"] as String\n            storeFile = keystoreProperties["storeFile"]?.let { file(it) }\n            storePassword = keystoreProperties["storePassword"] as String\n        }\n    }\n\n'''
+          s=s.replace('    buildTypes {',block+'    buildTypes {',1).replace('signingConfig = signingConfigs.getByName("debug")','signingConfig = signingConfigs.getByName("release")')
+          app.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Build signed Android App Bundle
+        working-directory: .build_play
+        shell: bash
+        run: |
+          flutter pub get
+          VERSION_CODE=$((100000 + GITHUB_RUN_NUMBER))
+          flutter build appbundle --release --build-name=1.0.0 --build-number="$VERSION_CODE"
+
+      - name: Upload Play Store bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClairVoyanceMedium-GooglePlay-AAB
+          path: .build_play/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 90
