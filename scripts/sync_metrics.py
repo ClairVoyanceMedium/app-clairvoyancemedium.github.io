@@ -52,6 +52,13 @@ def is_truthy(value):
     return str(value).strip().lower() in {'1', 'true', 't', 'yes', 'y'}
 
 
+def notification_type_value(value):
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return 0
+
+
 def parse_dt(value):
     if not value:
         return None
@@ -126,12 +133,14 @@ else:
 
         rows = list(csv.DictReader(io.StringIO(text)))
         for row in rows:
-            unsubscribed = is_truthy(row.get('invalid_identifier'))
+            invalid = is_truthy(row.get('invalid_identifier'))
+            notification_types = notification_type_value(row.get('notification_types'))
+            push_subscribed = (not invalid) and notification_types > 0
             sid = str(row.get('id', '') or '')
             subscriptions.append({
                 'id_short': sid[:8] + ('…' if len(sid) > 8 else ''),
                 'platform': platform_name(row),
-                'status': 'désabonné' if unsubscribed else 'abonné',
+                'status': 'abonné' if push_subscribed else 'désabonné',
                 'created_at': unix_or_iso(row.get('created_at')),
                 'last_active': unix_or_iso(row.get('last_active')),
                 'unsubscribed_at': unix_or_iso(row.get('unsubscribed_at')),
@@ -244,7 +253,11 @@ payload = {
         'active_7d': active_7d,
         'active_30d': active_30d,
         'android_subscribed': platform_counts.get('Android', 0),
-        'ios_web_subscribed': platform_counts.get('iOS / iPadOS Web Push', 0) + platform_counts.get('Safari Web Push', 0),
+        'ios_web_subscribed': (
+            platform_counts.get('iOS natif', 0)
+            + platform_counts.get('iOS / iPadOS Web Push', 0)
+            + platform_counts.get('Safari Web Push', 0)
+        ),
         'web_chrome_subscribed': platform_counts.get('Web Chrome', 0),
         'sessions_total': sessions_total,
         'playtime_total_seconds': playtime_total,
