@@ -86,6 +86,19 @@ def platform_name(row):
     }.get(dtype, f'Autre ({dtype or "inconnu"})')
 
 
+def message_target(msg):
+    segments = msg.get('included_segments') or []
+    if 'Subscribed Users' in segments:
+        return 'Tous les abonnés'
+    filters = msg.get('filters') or []
+    joined = json.dumps(filters, ensure_ascii=False)
+    if 'android_native' in joined:
+        return 'Android'
+    if 'ios_web' in joined or 'ios_native' in joined:
+        return 'iPhone / iPad'
+    return ''
+
+
 subscriptions = []
 messages = []
 messages_total_api_visible = 0
@@ -93,8 +106,6 @@ messages_total_api_visible = 0
 if not APP_ID or not API_KEY:
     errors.append('Clés OneSignal manquantes dans GitHub Secrets. Les métriques OneSignal ne peuvent pas être lues.')
 else:
-    # 1) Abonnements OneSignal. Une panne de cette source ne bloque plus
-    # la création de l’artefact : les autres métriques restent disponibles.
     try:
         export = request_json(
             f'https://api.onesignal.com/players/csv_export?app_id={urllib.parse.quote(APP_ID)}',
@@ -157,38 +168,51 @@ else:
     except Exception as exc:
         errors.append(f'Abonnements OneSignal indisponibles: {exc}')
 
-    # 2) Notifications récentes. Même principe : on conserve les métriques
-    # disponibles si l’API notifications échoue temporairement.
+    # Historique push : on récupère jusqu'à 200 notifications au lieu de seulement 50.
     try:
-        messages_response = request_json(
-            f'https://api.onesignal.com/notifications?app_id={urllib.parse.quote(APP_ID)}&limit=50&offset=0'
-        )
-        messages_total_api_visible = int(messages_response.get('total_count') or 0)
-        for msg in messages_response.get('notifications', []):
-            headings = msg.get('headings') or {}
-            contents = msg.get('contents') or {}
-            messages.append({
-                'id': msg.get('id'),
-                'title': headings.get('fr') or headings.get('en') or msg.get('name') or '',
-                'message': contents.get('fr') or contents.get('en') or '',
-                'queued_at': unix_or_iso(msg.get('queued_at')),
-                'completed_at': unix_or_iso(msg.get('completed_at')),
-                'successful': int(msg.get('successful') or 0),
-                'received': int(msg.get('received') or 0),
-                'clicked': int(msg.get('converted') or 0),
-                'failed': int(msg.get('failed') or 0),
-                'errored': int(msg.get('errored') or 0),
-                'remaining': int(msg.get('remaining') or 0),
-                'url': msg.get('url') or msg.get('web_url') or msg.get('app_url') or '',
-            })
+        limit = 50
+        max_history = 200
+        offset = 0
+        while offset < max_history:
+            messages_response = request_json(
+                f'https://api.onesignal.com/notifications?app_id={urllib.parse.quote(APP_ID)}&limit={limit}&offset={offset}'
+            )
+            if offset == 0:
+                messages_total_api_visible = int(messages_response.get('total_count') or 0)
+
+            batch = messages_response.get('notifications', []) or []
+            for msg in batch:
+                headings = msg.get('headings') or {}
+                contents = msg.get('contents') or {}
+                messages.append({
+                    'id': msg.get('id'),
+                    'name': msg.get('name') or '',
+                    'target': message_target(msg),
+                    'title': headings.get('fr') or headings.get('en') or msg.get('name') or '',
+                    'message': contents.get('fr') or contents.get('en') or '',
+                    'queued_at': unix_or_iso(msg.get('queued_at')),
+                    'completed_at': unix_or_iso(msg.get('completed_at')),
+                    'successful': int(msg.get('successful') or 0),
+                    'received': int(msg.get('received') or 0),
+                    'clicked': int(msg.get('converted') or 0),
+                    'failed': int(msg.get('failed') or 0),
+                    'errored': int(msg.get('errored') or 0),
+                    'remaining': int(msg.get('remaining') or 0),
+                    'url': msg.get('url') or msg.get('web_url') or msg.get('app_url') or '',
+                })
+
+            if len(batch) < limit:
+                break
+            if messages_total_api_visible and offset + limit >= messages_total_api_visible:
+                break
+            offset += limit
+
         if not messages_total_api_visible:
             messages_total_api_visible = len(messages)
     except Exception as exc:
         errors.append(f'Notifications OneSignal indisponibles: {exc}')
 
 
-# 3) Téléchargements du dernier APK GitHub Release. Cette source est publique
-# et reste disponible même si OneSignal est mal configuré.
 apk_downloads = 0
 apk_release_updated_at = None
 apk_size = None
@@ -275,10 +299,10 @@ payload = {
     'country_counts': dict(country_counts.most_common(50)),
     'version_counts': dict(version_counts.most_common(50)),
     'subscriptions': sorted(subscriptions, key=lambda x: x.get('created_at') or '', reverse=True),
-    'messages': messages,
+    'messages': sorted(messages, key=lambda x: x.get('queued_at') or '', reverse=True),
 }
 
 OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-print(f'Métriques écrites dans {OUT} : {subscribed} abonnés actifs, {unsubscribed} désabonnés, {apk_downloads} téléchargements APK, {len(errors)} avertissement(s).')
+print(f'Métriques écrites dans {OUT} : {subscribed} abonnés actifs, {unsubscribed} désabonnés, {apk_downloads} téléchargements APK, {len(messages)} notifications dans l’historique, {len(errors)} avertissement(s).')
 for err in errors:
     print('AVERTISSEMENT:', err)
