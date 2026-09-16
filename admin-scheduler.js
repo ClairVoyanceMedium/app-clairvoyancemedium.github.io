@@ -174,3 +174,45 @@
   script.defer=true;
   document.body.appendChild(script);
 })();
+
+// Verrouillage horizontal du tableau de bord sur téléphone.
+// Le défilement vertical et le zoom restent disponibles, mais la page ne peut
+// plus glisser latéralement et révéler une zone vide à droite ou à gauche.
+(()=>{
+  const style=document.createElement('style');
+  style.id='cvm-mobile-horizontal-lock';
+  style.textContent=`
+    html,body{max-width:100%;overflow-x:clip!important;overscroll-behavior-x:none}
+    @media(max-width:700px){
+      html,body{width:100%;max-width:100%;overflow-x:clip!important;overscroll-behavior-x:none;touch-action:pan-y pinch-zoom}
+      body,.shell,#dashboard,.top,.brand,.brand>div,.actions,.grid,.two,.bar-grid,.panel,.field,.preview,.filters,.history-filters,.rank,.table-wrap{min-width:0!important;max-width:100%!important}
+      .shell{width:100%!important;overflow-x:clip!important;touch-action:pan-y pinch-zoom}
+      #dashboard{width:100%!important;overflow-x:clip!important}
+      img,svg,canvas,video{max-width:100%!important;height:auto}
+      table{max-width:100%!important}
+    }
+  `;
+  document.head.appendChild(style);
+
+  const resetHorizontalPosition=()=>{
+    if(window.scrollX!==0){
+      window.scrollTo({left:0,top:window.scrollY,behavior:'auto'});
+    }
+  };
+
+  window.addEventListener('load',resetHorizontalPosition,{passive:true});
+  window.addEventListener('resize',resetHorizontalPosition,{passive:true});
+  window.addEventListener('orientationchange',()=>setTimeout(resetHorizontalPosition,80),{passive:true});
+
+  let scrollFixQueued=false;
+  window.addEventListener('scroll',()=>{
+    if(window.scrollX===0||scrollFixQueued)return;
+    scrollFixQueued=true;
+    requestAnimationFrame(()=>{
+      resetHorizontalPosition();
+      scrollFixQueued=false;
+    });
+  },{passive:true});
+
+  resetHorizontalPosition();
+})();
