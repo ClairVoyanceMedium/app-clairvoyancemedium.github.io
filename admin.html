@@ -104,5 +104,6 @@ function resetMetrics(){if(!metrics){stat($('pushStatus'),'Synchronisez d’abor
 $('loginBtn').onclick=()=>{token=$('tokenInput').value.trim();if(token)verify()};$('tokenInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginBtn').click()});$('logoutBtn').onclick=()=>{localStorage.removeItem('cvm_admin_token');sessionStorage.removeItem('cvm_admin_token');location.reload()};$('refreshBtn').onclick=()=>load(false);$('resetBtn').onclick=resetMetrics;$('sendBtn').onclick=send;$('syncBtn').onclick=()=>sync(false);['pushTitle','pushMessage'].forEach(id=>$(id).addEventListener('input',()=>{$('previewTitle').textContent=$('pushTitle').value||'Titre de la notification';$('previewBody').textContent=$('pushMessage').value||'Le texte apparaîtra ici.'}));['messageSearch','messageStatus'].forEach(id=>$(id).addEventListener('input',messages));['searchInput','platformFilter','statusFilter'].forEach(id=>$(id).addEventListener('input',subs));if(token){$('tokenInput').value=token;verify()}
 })();
 </script>
+<script src="admin-scheduler.js"></script>
 </body>
 </html>
