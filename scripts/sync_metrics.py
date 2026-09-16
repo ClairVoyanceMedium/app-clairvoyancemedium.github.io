@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import csv
 import gzip
+import hashlib
 import io
 import json
 import os
@@ -15,6 +16,8 @@ from pathlib import Path
 APP_ID = os.environ.get('ONESIGNAL_APP_ID', '').strip()
 API_KEY = os.environ.get('ONESIGNAL_API_KEY', '').strip()
 OUT = Path(os.environ.get('METRICS_OUTPUT', 'metrics-private.json'))
+ADMIN_EXTERNAL_ID = os.environ.get('ADMIN_EXTERNAL_ID', 'cvm_admin_frederick').strip()
+TRACKING_START_RAW = os.environ.get('INSTALL_TRACKING_START', '2026-09-16T15:20:00Z').strip()
 
 HEADERS = {
     'Authorization': f'Key {API_KEY}',
@@ -30,7 +33,8 @@ def request_json(url, method='GET', payload=None, headers=None):
     req = urllib.request.Request(url, data=data, headers=headers or HEADERS, method=method)
     try:
         with urllib.request.urlopen(req, timeout=60) as r:
-            return json.loads(r.read().decode('utf-8'))
+            raw = r.read().decode('utf-8')
+            return json.loads(raw) if raw else {}
     except urllib.error.HTTPError as exc:
         body = exc.read().decode('utf-8', errors='replace')
         raise RuntimeError(f'HTTP {exc.code}: {body}') from exc
@@ -45,7 +49,14 @@ def unix_or_iso(value):
             number /= 1000
         return datetime.fromtimestamp(number, tz=timezone.utc).isoformat()
     except (TypeError, ValueError, OverflowError):
-        return str(value)
+        raw = str(value)
+        try:
+            dt = datetime.fromisoformat(raw.replace('Z', '+00:00'))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt.astimezone(timezone.utc).isoformat()
+        except ValueError:
+            return raw
 
 
 def is_truthy(value):
@@ -63,6 +74,13 @@ def parse_dt(value):
     if not value:
         return None
     try:
+        number = float(str(value))
+        if number > 100000000000:
+            number /= 1000
+        return datetime.fromtimestamp(number, tz=timezone.utc)
+    except (TypeError, ValueError, OverflowError):
+        pass
+    try:
         dt = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
@@ -71,11 +89,41 @@ def parse_dt(value):
         return None
 
 
-def platform_name(row):
-    dtype = str(row.get('device_type', '')).strip()
-    tags = str(row.get('tags', '') or '')
-    if 'ios_web' in tags:
+def parse_tags(value):
+    if isinstance(value, dict):
+        return {str(k): str(v) for k, v in value.items()}
+    raw = str(value or '').strip()
+    if not raw:
+        return {}
+    try:
+        obj = json.loads(raw)
+        if isinstance(obj, dict):
+            return {str(k): str(v) for k, v in obj.items()}
+    except json.JSONDecodeError:
+        pass
+    return {}
+
+
+def anonymous_id(sid, tags):
+    install_id = str(tags.get('install_id') or '').strip()
+    if install_id:
+        return install_id[:12] + ('…' if len(install_id) > 12 else '')
+    if not sid:
+        return '—'
+    return hashlib.sha256(sid.encode('utf-8')).hexdigest()[:12]
+
+
+def platform_name(row, tags=None):
+    tags = tags or parse_tags(row.get('tags'))
+    tagged = str(tags.get('platform') or '').strip()
+    if tagged == 'android_native':
+        return 'Android'
+    if tagged == 'ios_native':
+        return 'iOS natif'
+    if tagged == 'ios_web':
         return 'iOS / iPadOS Web Push'
+
+    dtype = str(row.get('device_type', '')).strip()
     return {
         '0': 'iOS natif',
         '1': 'Android',
@@ -86,7 +134,19 @@ def platform_name(row):
     }.get(dtype, f'Autre ({dtype or "inconnu"})')
 
 
+def push_status(row, invalid, notification_types):
+    token = bool(str(row.get('identifier', '') or '').strip())
+    if not invalid and notification_types > 0 and token:
+        return 'activé'
+    if notification_types == 0:
+        return 'non autorisé'
+    return 'désactivé ou invalide'
+
+
 def message_target(msg):
+    aliases = msg.get('include_aliases') or {}
+    if ADMIN_EXTERNAL_ID in (aliases.get('external_id') or []):
+        return 'Administrateur'
     segments = msg.get('included_segments') or []
     if 'Subscribed Users' in segments:
         return 'Tous les abonnés'
@@ -147,20 +207,29 @@ else:
             invalid = is_truthy(row.get('invalid_identifier'))
             notification_types = notification_type_value(row.get('notification_types'))
             push_subscribed = (not invalid) and notification_types > 0
-            sid = str(row.get('id', '') or '')
+            sid = str(row.get('id', '') or '').strip()
+            tags = parse_tags(row.get('tags'))
+            created_at = unix_or_iso(row.get('created_at'))
+            first_install_at = unix_or_iso(tags.get('first_install_ts')) or created_at
+            external_id = str(row.get('external_user_id', '') or '').strip()
             subscriptions.append({
+                'anonymous_id': anonymous_id(sid, tags),
                 'id_short': sid[:8] + ('…' if len(sid) > 8 else ''),
-                'platform': platform_name(row),
+                'is_admin': external_id == ADMIN_EXTERNAL_ID,
+                'platform': platform_name(row, tags),
                 'status': 'abonné' if push_subscribed else 'désabonné',
-                'created_at': unix_or_iso(row.get('created_at')),
+                'push_status': push_status(row, invalid, notification_types),
+                'created_at': created_at,
+                'first_install_at': first_install_at,
                 'last_active': unix_or_iso(row.get('last_active')),
                 'unsubscribed_at': unix_or_iso(row.get('unsubscribed_at')),
                 'country': row.get('country') or '',
-                'language': row.get('language') or '',
+                'language': row.get('language') or tags.get('device_locale') or '',
                 'timezone': row.get('timezone_id') or '',
                 'device_model': row.get('device_model') or '',
                 'device_os': row.get('device_os') or '',
                 'app_version': row.get('game_version') or '',
+                'install_source': tags.get('install_source') or tags.get('distribution') or '',
                 'session_count': int(float(row.get('session_count') or 0)),
                 'playtime_seconds': int(float(row.get('playtime') or 0)),
                 'notification_types': row.get('notification_types') or '',
@@ -233,12 +302,16 @@ except Exception as exc:
     errors.append(f'Téléchargements APK indisponibles: {exc}')
 
 now = datetime.now(timezone.utc)
+tracking_start = parse_dt(TRACKING_START_RAW) or now
 new_24h = 0
 active_7d = 0
 active_30d = 0
+installations = []
+
 for s in subscriptions:
     created = parse_dt(s.get('created_at'))
     last_active = parse_dt(s.get('last_active'))
+    first_install = parse_dt(s.get('first_install_at'))
     if created and (now - created).total_seconds() <= 86400:
         new_24h += 1
     if last_active and s['status'] == 'abonné':
@@ -247,7 +320,32 @@ for s in subscriptions:
             active_7d += 1
         if age <= 30 * 86400:
             active_30d += 1
+    if first_install and first_install >= tracking_start and not s.get('is_admin'):
+        installations.append({
+            'anonymous_id': s.get('anonymous_id') or '—',
+            'detected_at': s.get('first_install_at') or s.get('created_at'),
+            'platform': s.get('platform') or '',
+            'device_model': s.get('device_model') or '',
+            'device_os': s.get('device_os') or '',
+            'app_version': s.get('app_version') or '',
+            'country': s.get('country') or '',
+            'timezone': s.get('timezone') or '',
+            'language': s.get('language') or '',
+            'install_source': s.get('install_source') or '',
+            'push_status': s.get('push_status') or '',
+            'session_count': s.get('session_count') or 0,
+            'playtime_seconds': s.get('playtime_seconds') or 0,
+            'last_active': s.get('last_active'),
+        })
 
+installations.sort(key=lambda x: x.get('detected_at') or '', reverse=True)
+installations_last_24h = sum(
+    1
+    for item in installations
+    if (dt := parse_dt(item.get('detected_at'))) is not None
+    and (now - dt).total_seconds() <= 86400
+)
+installation_platform_counts = Counter(i['platform'] or 'Inconnu' for i in installations)
 platform_counts = Counter(s['platform'] for s in subscriptions if s['status'] == 'abonné')
 country_counts = Counter(s['country'] or 'Inconnu' for s in subscriptions if s['status'] == 'abonné')
 version_counts = Counter(s['app_version'] or 'Inconnue' for s in subscriptions if s['status'] == 'abonné')
@@ -270,7 +368,11 @@ payload = {
         'messages_loaded': len(messages),
         'github_apk_loaded': apk_size is not None,
     },
-    'privacy': 'Les tokens push, adresses IP, identifiants OneSignal complets et autres secrets sont exclus de cet artefact.',
+    'privacy': (
+        'Les tokens push, adresses IP et identifiants OneSignal complets sont exclus. '
+        'Les installations sont représentées par un identifiant technique anonyme. '
+        'Le pays est approximatif et provient de OneSignal; aucune localisation GPS n’est collectée par ce tableau.'
+    ),
     'summary': {
         'subscriptions_total': len(subscriptions),
         'subscribed': subscribed,
@@ -290,6 +392,9 @@ payload = {
         'apk_downloads': apk_downloads,
         'apk_release_updated_at': apk_release_updated_at,
         'apk_size_bytes': apk_size,
+        'install_tracking_start': tracking_start.isoformat(),
+        'installations_detected': len(installations),
+        'installations_last_24h': installations_last_24h,
         'messages_total_api_visible': messages_total_api_visible,
         'messages_loaded': len(messages),
         'notifications_sent_recent': notifications_sent,
@@ -300,11 +405,17 @@ payload = {
     'platform_counts': dict(platform_counts),
     'country_counts': dict(country_counts.most_common(50)),
     'version_counts': dict(version_counts.most_common(50)),
+    'installation_platform_counts': dict(installation_platform_counts),
+    'installations': installations[:500],
     'subscriptions': sorted(subscriptions, key=lambda x: x.get('created_at') or '', reverse=True),
     'messages': sorted(messages, key=lambda x: x.get('queued_at') or '', reverse=True),
 }
 
 OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-print(f'Métriques écrites dans {OUT} : {subscribed} abonnés actifs, {unsubscribed} désabonnés, {apk_downloads} téléchargements APK, {len(messages)} notifications dans l’historique, {len(errors)} avertissement(s).')
+print(
+    f'Métriques écrites dans {OUT} : {subscribed} abonnés actifs, {unsubscribed} désabonnés, '
+    f'{apk_downloads} téléchargements APK, {len(installations)} installation(s) détectée(s) depuis le suivi, '
+    f'{len(messages)} notifications dans l’historique, {len(errors)} avertissement(s).'
+)
 for err in errors:
     print('AVERTISSEMENT:', err)
