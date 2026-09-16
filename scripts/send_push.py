@@ -24,11 +24,42 @@ if TARGET not in {'all', 'android', 'ios_web'}:
 payload = {
     'app_id': APP_ID,
     'target_channel': 'push',
-    'included_segments': ['Subscribed Users'],
     'headings': {'fr': TITLE, 'en': TITLE},
     'contents': {'fr': MESSAGE, 'en': MESSAGE},
     'name': f'CVM {datetime.now(timezone.utc).isoformat(timespec="seconds")}',
 }
+
+# OneSignal n'autorise qu'une seule méthode de ciblage par requête.
+# Pour "tous", on utilise le segment officiel Subscribed Users.
+# Pour Android et iPhone/iPad, on cible les tags ajoutés par nos applications
+# afin d'éviter les faux positifs liés aux anciens drapeaux de plateforme.
+if TARGET == 'all':
+    payload['included_segments'] = ['Subscribed Users']
+elif TARGET == 'android':
+    payload['filters'] = [
+        {
+            'field': 'tag',
+            'key': 'platform',
+            'relation': '=',
+            'value': 'android_native',
+        }
+    ]
+elif TARGET == 'ios_web':
+    payload['filters'] = [
+        {
+            'field': 'tag',
+            'key': 'platform',
+            'relation': '=',
+            'value': 'ios_web',
+        },
+        {'operator': 'OR'},
+        {
+            'field': 'tag',
+            'key': 'platform',
+            'relation': '=',
+            'value': 'ios_native',
+        },
+    ]
 
 if URL:
     payload['url'] = URL
@@ -36,15 +67,8 @@ if IMAGE_URL:
     payload['big_picture'] = IMAGE_URL
     payload['chrome_web_image'] = IMAGE_URL
 
-if TARGET == 'android':
-    payload['isAndroid'] = True
-    payload['isAnyWeb'] = False
-elif TARGET == 'ios_web':
-    payload['isAndroid'] = False
-    payload['isAnyWeb'] = True
-
 request = urllib.request.Request(
-    'https://api.onesignal.com/notifications',
+    'https://api.onesignal.com/notifications?c=push',
     data=json.dumps(payload).encode('utf-8'),
     headers={
         'Authorization': f'Key {API_KEY}',
@@ -62,7 +86,10 @@ except urllib.error.HTTPError as exc:
     sys.exit(f'Erreur OneSignal HTTP {exc.code}: {body}')
 
 if not result.get('id'):
-    sys.exit(f'OneSignal n’a pas renvoyé d’identifiant de message: {json.dumps(result, ensure_ascii=False)}')
+    sys.exit(
+        'OneSignal n’a trouvé aucun abonnement push valide pour cette cible: '
+        + json.dumps(result, ensure_ascii=False)
+    )
 
 print(json.dumps({
     'status': 'sent',
