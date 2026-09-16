@@ -4,12 +4,13 @@ import gzip
 import io
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 APP_ID = os.environ.get('ONESIGNAL_APP_ID', '').strip()
 API_KEY = os.environ.get('ONESIGNAL_API_KEY', '').strip()
@@ -18,6 +19,9 @@ MESSAGE = os.environ.get('PUSH_MESSAGE', '').strip()
 URL = os.environ.get('PUSH_URL', '').strip()
 IMAGE_URL = os.environ.get('PUSH_IMAGE_URL', '').strip()
 TARGET = os.environ.get('PUSH_TARGET', 'all').strip().lower()
+DELIVERY_MODE = os.environ.get('PUSH_DELIVERY_MODE', 'now').strip().lower()
+SEND_AFTER = os.environ.get('PUSH_SEND_AFTER', '').strip()
+DELIVERY_TIME = os.environ.get('PUSH_DELIVERY_TIME', '19:00').strip()
 
 if not APP_ID or not API_KEY:
     sys.exit('ONESIGNAL_APP_ID et ONESIGNAL_API_KEY doivent être configurés dans GitHub Secrets.')
@@ -25,6 +29,8 @@ if not TITLE or not MESSAGE:
     sys.exit('Le titre et le message sont obligatoires.')
 if TARGET not in {'all', 'android', 'ios_web'}:
     sys.exit('Cible invalide. Utiliser all, android ou ios_web.')
+if DELIVERY_MODE not in {'now', 'scheduled', 'smart_last_active', 'local_time'}:
+    sys.exit('Mode de livraison invalide.')
 
 HEADERS = {
     'Authorization': f'Key {API_KEY}',
@@ -123,12 +129,37 @@ def fetch_subscription_ids():
             'matched_target': matched,
         })
 
-        # OneSignal exige à la fois un abonnement positif et un jeton push.
         if sid and matched and not invalid and ntype > 0 and token:
             valid_ids.append(sid)
 
     print('Diagnostic abonnements OneSignal:', json.dumps(diagnostics, ensure_ascii=False))
     return list(dict.fromkeys(valid_ids))
+
+
+def normalize_send_after(value):
+    if not value:
+        raise ValueError('Une date et une heure sont obligatoires pour un envoi programmé.')
+    try:
+        dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+    except ValueError as exc:
+        raise ValueError('Date/heure de programmation invalide.') from exc
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    dt = dt.astimezone(timezone.utc)
+    if dt <= datetime.now(timezone.utc) + timedelta(seconds=30):
+        raise ValueError('La date programmée doit être dans le futur.')
+    return dt.isoformat(timespec='seconds').replace('+00:00', 'Z')
+
+
+def normalize_delivery_time(value):
+    if not re.fullmatch(r'\d{2}:\d{2}(?::\d{2})?', value or ''):
+        raise ValueError('Heure locale invalide. Utiliser HH:MM.')
+    parts = [int(x) for x in value.split(':')]
+    hour, minute = parts[0], parts[1]
+    second = parts[2] if len(parts) > 2 else 0
+    if not (0 <= hour <= 23 and 0 <= minute <= 59 and 0 <= second <= 59):
+        raise ValueError('Heure locale invalide.')
+    return f'{hour:02d}:{minute:02d}' + (f':{second:02d}' if len(parts) > 2 else '')
 
 
 try:
@@ -150,6 +181,19 @@ payload = {
     'contents': {'fr': MESSAGE, 'en': MESSAGE},
     'name': f'CVM {datetime.now(timezone.utc).isoformat(timespec="seconds")}',
 }
+
+try:
+    if DELIVERY_MODE == 'scheduled':
+        payload['send_after'] = normalize_send_after(SEND_AFTER)
+    elif DELIVERY_MODE == 'smart_last_active':
+        payload['delayed_option'] = 'last-active'
+        payload['throttle_rate_per_minute'] = 0
+    elif DELIVERY_MODE == 'local_time':
+        payload['delayed_option'] = 'timezone'
+        payload['delivery_time_of_day'] = normalize_delivery_time(DELIVERY_TIME)
+        payload['throttle_rate_per_minute'] = 0
+except ValueError as exc:
+    sys.exit(str(exc))
 
 if URL:
     payload['url'] = URL
@@ -173,9 +217,12 @@ if not result.get('id'):
     )
 
 print(json.dumps({
-    'status': 'sent',
+    'status': 'scheduled' if DELIVERY_MODE != 'now' else 'sent',
     'message_id': result['id'],
     'target': TARGET,
+    'delivery_mode': DELIVERY_MODE,
+    'send_after': payload.get('send_after'),
+    'delivery_time_of_day': payload.get('delivery_time_of_day'),
     'subscription_count': len(subscription_ids),
     'title': TITLE,
 }, ensure_ascii=False))
