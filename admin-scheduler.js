@@ -45,7 +45,7 @@
   const deliveryHelp=$('deliveryHelp');
   const scheduleTimezone=$('scheduleTimezone');
 
-  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]))}
   function setStatus(msg,type=''){status.className='status'+(type?' '+type:'');status.innerHTML=msg}
   function token(){return localStorage.getItem('cvm_admin_token')||sessionStorage.getItem('cvm_admin_token')||''}
   function headers(){return {'Authorization':'Bearer '+token(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}
@@ -166,4 +166,11 @@
   }
 
   sendBtn.onclick=sendScheduledAware;
+})();
+
+(()=>{
+  const script=document.createElement('script');
+  script.src='admin-installs.js?v=20260916-1';
+  script.defer=true;
+  document.body.appendChild(script);
 })();
