@@ -13,7 +13,8 @@ import urllib.request
 APP_ID = os.environ.get('ONESIGNAL_APP_ID', '').strip()
 API_KEY = os.environ.get('ONESIGNAL_API_KEY', '').strip()
 ADMIN_EXTERNAL_ID = os.environ.get('ADMIN_EXTERNAL_ID', 'cvm_admin_frederick').strip()
-ADMIN_DEVICE_MODEL = os.environ.get('ADMIN_DEVICE_MODEL', 'SM-F971B').strip()
+ADMIN_SUBSCRIPTION_ID = os.environ.get('ADMIN_SUBSCRIPTION_ID', '').strip()
+ADMIN_DEVICE_MODEL = os.environ.get('ADMIN_DEVICE_MODEL', '').strip()
 ADMIN_COUNTRY = os.environ.get('ADMIN_COUNTRY', 'FR').strip().upper()
 ADMIN_TIMEZONE = os.environ.get('ADMIN_TIMEZONE', 'Europe/Paris').strip()
 
@@ -48,6 +49,17 @@ def ntype(value):
         return int(float(value))
     except (TypeError, ValueError):
         return 0
+
+
+def active_subscription(row):
+    sid = str(row.get('id', '') or '').strip()
+    token = str(row.get('identifier', '') or '').strip()
+    return bool(
+        sid
+        and token
+        and not truthy(row.get('invalid_identifier'))
+        and ntype(row.get('notification_types')) > 0
+    )
 
 
 def export_rows():
@@ -89,22 +101,34 @@ def export_rows():
 
 
 rows = export_rows()
-candidates = []
-for row in rows:
-    sid = str(row.get('id', '') or '').strip()
-    token = str(row.get('identifier', '') or '').strip()
-    if not sid or not token:
-        continue
-    if truthy(row.get('invalid_identifier')) or ntype(row.get('notification_types')) <= 0:
-        continue
-    if str(row.get('device_model', '') or '').strip() != ADMIN_DEVICE_MODEL:
-        continue
-    if str(row.get('country', '') or '').strip().upper() != ADMIN_COUNTRY:
-        continue
-    tz = str(row.get('timezone_id', '') or row.get('timezone', '') or '').strip()
-    if ADMIN_TIMEZONE and tz != ADMIN_TIMEZONE:
-        continue
-    candidates.append(row)
+active_rows = [row for row in rows if active_subscription(row)]
+
+# Méthode la plus sûre pour un changement de téléphone : l'identifiant OneSignal
+# exact de la nouvelle installation, fourni par le workflow administrateur.
+if ADMIN_SUBSCRIPTION_ID:
+    candidates = [
+        row for row in active_rows
+        if str(row.get('id', '') or '').strip() == ADMIN_SUBSCRIPTION_ID
+    ]
+else:
+    # Compatibilité avec l'appareil administrateur déjà connu et possibilité de
+    # ré-appairer un futur téléphone à partir de son modèle + pays + fuseau.
+    if not ADMIN_DEVICE_MODEL:
+        sys.exit(
+            'Marquage administrateur arrêté par sécurité: fournissez '
+            'ADMIN_SUBSCRIPTION_ID ou ADMIN_DEVICE_MODEL.'
+        )
+
+    candidates = []
+    for row in active_rows:
+        if str(row.get('device_model', '') or '').strip() != ADMIN_DEVICE_MODEL:
+            continue
+        if ADMIN_COUNTRY and str(row.get('country', '') or '').strip().upper() != ADMIN_COUNTRY:
+            continue
+        tz = str(row.get('timezone_id', '') or row.get('timezone', '') or '').strip()
+        if ADMIN_TIMEZONE and tz != ADMIN_TIMEZONE:
+            continue
+        candidates.append(row)
 
 if len(candidates) != 1:
     summary = [
@@ -141,7 +165,9 @@ print(json.dumps({
     'status': 'admin_device_marked',
     'external_id': ADMIN_EXTERNAL_ID,
     'subscription_id_short': subscription_id[:8] + '…',
-    'device_model': ADMIN_DEVICE_MODEL,
-    'country': ADMIN_COUNTRY,
-    'timezone': ADMIN_TIMEZONE,
+    'device_model': str(candidates[0].get('device_model', '') or '').strip(),
+    'country': str(candidates[0].get('country', '') or '').strip().upper(),
+    'timezone': str(candidates[0].get('timezone_id', '') or candidates[0].get('timezone', '') or '').strip(),
+    'pairing_method': 'subscription_id' if ADMIN_SUBSCRIPTION_ID else 'device_model',
+    'note': 'Le même external_id peut être associé à plusieurs appareils administrateur. Le changement de téléphone ne casse donc pas les alertes.',
 }, ensure_ascii=False))
