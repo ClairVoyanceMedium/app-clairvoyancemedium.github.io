@@ -33,7 +33,6 @@ void _initPushInfrastructure() {
 
   // OneSignal suit automatiquement les sessions, la version de l'appareil,
   // le système, la version de l'application et l'état de l'abonnement.
-  // Cet événement facilite aussi les analyses d'ouverture côté tableau de bord.
   OneSignal.User.trackEvent('app_open');
 }
 
@@ -145,7 +144,26 @@ class _WebsiteShellState extends State<WebsiteShell> {
   void _schedulePushPrompt() {
     if (_pushPromptScheduled || !mounted) return;
     _pushPromptScheduled = true;
-    Future<void>.delayed(const Duration(milliseconds: 900), _maybePromptNotifications);
+    Future<void>.delayed(
+      const Duration(milliseconds: 900),
+      _maybePromptNotifications,
+    );
+  }
+
+  Future<void> _ensurePushSubscribed() async {
+    if (!(Platform.isAndroid || Platform.isIOS)) return;
+    if (!OneSignal.Notifications.permission) return;
+
+    try {
+      await OneSignal.User.pushSubscription.optIn();
+      OneSignal.User.addTags({
+        'push_permission': 'granted',
+        'push_opted_in': 'true',
+      });
+      OneSignal.User.trackEvent('push_subscription_refreshed');
+    } catch (_) {
+      // Une indisponibilité temporaire de OneSignal ne doit pas bloquer l'app.
+    }
   }
 
   Future<void> _maybePromptNotifications() async {
@@ -155,7 +173,14 @@ class _WebsiteShellState extends State<WebsiteShell> {
     final alreadyExplained = prefs.getBool('push_explainer_seen') ?? false;
     final permissionGranted = OneSignal.Notifications.permission;
 
-    if (permissionGranted || alreadyExplained || !mounted) return;
+    // Si Android ou iOS autorise déjà les notifications, on s'assure aussi
+    // que l'abonnement OneSignal est réellement réactivé.
+    if (permissionGranted) {
+      await _ensurePushSubscribed();
+      return;
+    }
+
+    if (alreadyExplained || !mounted) return;
 
     final accepted = await showDialog<bool>(
       context: context,
@@ -187,10 +212,16 @@ class _WebsiteShellState extends State<WebsiteShell> {
 
     if (accepted == true) {
       await OneSignal.Notifications.requestPermission(true);
+      final permissionNowGranted = OneSignal.Notifications.permission;
+
+      if (permissionNowGranted) {
+        await _ensurePushSubscribed();
+      }
+
       OneSignal.User.trackEvent('push_permission_prompted');
       OneSignal.User.addTags({
-        'push_permission':
-            OneSignal.Notifications.permission ? 'granted' : 'not_granted',
+        'push_permission': permissionNowGranted ? 'granted' : 'not_granted',
+        'push_opted_in': permissionNowGranted ? 'true' : 'false',
       });
     }
   }
