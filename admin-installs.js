@@ -16,20 +16,22 @@
       <h2>Installations détectées</h2>
       <span id="installFeedCount">0 installation</span>
     </div>
-    <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:12px">
+    <div class="grid" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:12px">
       <div class="metric"><div class="k">Installations suivies</div><div class="v" id="installTotal">—</div><div class="s">Depuis l’activation du suivi</div></div>
       <div class="metric"><div class="k">Nouvelles 24 h</div><div class="v" id="install24">—</div><div class="s">Premières détections</div></div>
+      <div class="metric"><div class="k">Google Play</div><div class="v" id="installPlay">—</div><div class="s">Installations Play détectées à la première ouverture</div></div>
       <div class="metric"><div class="k">Téléchargements APK</div><div class="v" id="installApkDownloads">—</div><div class="s">Compteur GitHub cumulatif</div></div>
     </div>
-    <div class="history-filters">
+    <div class="history-filters" style="grid-template-columns:minmax(0,2fr) minmax(150px,1fr) minmax(150px,1fr)">
       <input id="installSearch" placeholder="Rechercher appareil, pays, plateforme, identifiant…">
       <select id="installPlatform"><option value="">Toutes plateformes</option><option value="Android">Android</option><option value="iOS natif">iPhone / iPad</option><option value="iOS / iPadOS Web Push">iOS Web Push</option><option value="Web Chrome">Web Chrome</option><option value="Safari Web Push">Safari Web Push</option></select>
+      <select id="installSource"><option value="">Toutes les sources</option><option value="play_store">Google Play</option><option value="direct_apk">APK directe</option><option value="pwa">PWA</option><option value="native_ios">iOS natif</option></select>
     </div>
-    <div class="table-wrap"><table style="min-width:1180px">
-      <thead><tr><th>Détection</th><th>ID anonyme</th><th>Plateforme</th><th>Appareil</th><th>OS</th><th>Version</th><th>Pays</th><th>Fuseau</th><th>Langue</th><th>Push</th><th>Sessions</th><th>Dernière activité</th></tr></thead>
-      <tbody id="installationsBody"><tr><td colspan="12">Chargement…</td></tr></tbody>
+    <div class="table-wrap"><table style="min-width:1260px">
+      <thead><tr><th>Détection</th><th>ID anonyme</th><th>Plateforme</th><th>Source</th><th>Appareil</th><th>OS</th><th>Version</th><th>Pays</th><th>Fuseau</th><th>Langue</th><th>Push</th><th>Sessions</th><th>Dernière activité</th></tr></thead>
+      <tbody id="installationsBody"><tr><td colspan="13">Chargement…</td></tr></tbody>
     </table></div>
-    <p class="note" id="installPrivacy">Une « installation détectée » correspond à la première ouverture enregistrée par l’application/OneSignal, pas à l’identité civile de la personne. L’identifiant est technique et anonyme. Le pays est approximatif et issu du réseau. Aucune localisation GPS n’est ajoutée.</p>
+    <p class="note" id="installPrivacy">Une « installation détectée » correspond à la première ouverture enregistrée par l’application/OneSignal, pas à l’identité civile de la personne. L’identifiant est technique et anonyme. La source permet de distinguer Google Play de l’APK directe. Le pays est approximatif et issu du réseau. Aucune localisation GPS n’est ajoutée.</p>
   `;
 
   const subscriptionsPanel=[...dashboard.querySelectorAll('section.panel')].find(x=>x.textContent.includes('Abonnements et appareils'));
@@ -43,17 +45,22 @@
   function token(){return localStorage.getItem('cvm_admin_token')||sessionStorage.getItem('cvm_admin_token')||''}
   function headers(){return {'Authorization':'Bearer '+token(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}
   function fmt(v){if(!v)return'—';try{return new Intl.DateTimeFormat('fr-FR',{dateStyle:'short',timeStyle:'short'}).format(new Date(v))}catch{return String(v)}}
+  function sourceLabel(v){return({play_store:'Google Play',direct_apk:'APK directe',pwa:'PWA',native_ios:'iOS natif',native:'Natif'})[v]||v||'—'}
   async function gh(url,opts={}){const r=await fetch(url,{...opts,headers:{...headers(),...(opts.headers||{})}});if(!r.ok)throw new Error('GitHub '+r.status);return r}
 
   function render(){
     let rows=[...installData];
     const q=$('installSearch').value.trim().toLowerCase();
     const p=$('installPlatform').value;
+    const src=$('installSource').value;
     if(p)rows=rows.filter(x=>x.platform===p);
+    if(src)rows=rows.filter(x=>(x.install_source||'')===src);
     if(q)rows=rows.filter(x=>JSON.stringify(x).toLowerCase().includes(q));
 
+    const playCount=installData.filter(x=>(x.install_source||'')==='play_store').length;
     $('installTotal').textContent=Number(summary.installations_detected||0).toLocaleString('fr-FR');
     $('install24').textContent=Number(summary.installations_last_24h||0).toLocaleString('fr-FR');
+    $('installPlay').textContent=playCount.toLocaleString('fr-FR');
     $('installApkDownloads').textContent=Number(summary.apk_downloads||0).toLocaleString('fr-FR');
     $('installFeedCount').textContent=rows.length+(rows.length!==installData.length?' / '+installData.length:'')+' installation'+(installData.length>1?'s':'');
 
@@ -61,6 +68,7 @@
       <td data-label="Détection">${esc(fmt(x.detected_at))}</td>
       <td data-label="ID anonyme"><span class="pill">${esc(x.anonymous_id||'—')}</span></td>
       <td data-label="Plateforme">${esc(x.platform||'—')}</td>
+      <td data-label="Source">${esc(sourceLabel(x.install_source))}</td>
       <td data-label="Appareil">${esc(x.device_model||'—')}</td>
       <td data-label="OS">${esc(x.device_os||'—')}</td>
       <td data-label="Version">${esc(x.app_version||'—')}</td>
@@ -70,7 +78,7 @@
       <td data-label="Push"><span class="pill ${x.push_status==='activé'?'on':x.push_status==='non autorisé'?'pending':'off'}">${esc(x.push_status||'—')}</span></td>
       <td data-label="Sessions">${Number(x.session_count||0)}</td>
       <td data-label="Dernière activité">${esc(fmt(x.last_active))}</td>
-    </tr>`).join(''):'<tr><td colspan="12">Aucune nouvelle installation détectée depuis l’activation du suivi.</td></tr>';
+    </tr>`).join(''):'<tr><td colspan="13">Aucune nouvelle installation détectée depuis l’activation du suivi.</td></tr>';
   }
 
   async function loadInstallations(){
@@ -90,12 +98,13 @@
       installData=Array.isArray(data.installations)?data.installations:[];
       render();
     }catch(e){
-      $('installationsBody').innerHTML='<tr><td colspan="12">Journal des installations momentanément indisponible. Utilisez « Synchroniser les métriques » puis réessayez.</td></tr>';
+      $('installationsBody').innerHTML='<tr><td colspan="13">Journal des installations momentanément indisponible. Utilisez « Synchroniser les métriques » puis réessayez.</td></tr>';
     }
   }
 
   $('installSearch').addEventListener('input',render);
   $('installPlatform').addEventListener('input',render);
+  $('installSource').addEventListener('input',render);
   $('refreshBtn')?.addEventListener('click',()=>setTimeout(loadInstallations,600));
   $('syncBtn')?.addEventListener('click',()=>setTimeout(loadInstallations,12000));
   $('loginBtn')?.addEventListener('click',()=>setTimeout(loadInstallations,1800));
