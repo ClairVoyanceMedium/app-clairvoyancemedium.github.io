@@ -1,0 +1,39 @@
+name: Mark admin device
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/mark_admin_device.py'
+      - '.github/workflows/mark-admin-device.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  mark-admin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate OneSignal secrets
+        env:
+          ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY || secrets.ONESIGNAL_APP_KEY }}
+        shell: bash
+        run: |
+          test -n "$ONESIGNAL_APP_ID" || { echo '::error::ONESIGNAL_APP_ID manquant'; exit 1; }
+          test -n "$ONESIGNAL_API_KEY" || { echo '::error::Clé API OneSignal manquante'; exit 1; }
+
+      - name: Mark current administrator device
+        env:
+          ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY || secrets.ONESIGNAL_APP_KEY }}
+          ADMIN_EXTERNAL_ID: cvm_admin_frederick
+          ADMIN_DEVICE_MODEL: SM-F971B
+          ADMIN_COUNTRY: FR
+          ADMIN_TIMEZONE: Europe/Paris
+        run: python3 scripts/mark_admin_device.py
