@@ -30,6 +30,26 @@ on:
           - all
           - android
           - ios_web
+      delivery_mode:
+        description: Mode de livraison
+        required: true
+        default: now
+        type: choice
+        options:
+          - now
+          - scheduled
+          - smart_last_active
+          - local_time
+      send_after:
+        description: Date/heure ISO 8601 pour un envoi programmé
+        required: false
+        default: ''
+        type: string
+      delivery_time:
+        description: Heure locale HH:MM pour le mode fuseau utilisateur
+        required: false
+        default: '19:00'
+        type: string
 
 permissions:
   contents: read
@@ -59,4 +79,7 @@ jobs:
           PUSH_URL: ${{ inputs.url }}
           PUSH_IMAGE_URL: ${{ inputs.image_url }}
           PUSH_TARGET: ${{ inputs.target }}
+          PUSH_DELIVERY_MODE: ${{ inputs.delivery_mode }}
+          PUSH_SEND_AFTER: ${{ inputs.send_after }}
+          PUSH_DELIVERY_TIME: ${{ inputs.delivery_time }}
         run: python3 scripts/send_push.py
