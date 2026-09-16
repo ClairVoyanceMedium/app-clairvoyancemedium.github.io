@@ -34,7 +34,7 @@
     let visible=0;
     const dates=[];
     [...body.querySelectorAll('tr')].forEach(row=>{
-      if(row.classList.contains('cvm-reset-placeholder')){row.remove();return}
+      if(row.classList.contains('cvm-reset-placeholder'))return;
       const cell=row.querySelector(`[data-label="${label}"]`);
       if(!cell)return;
       const when=parseDisplayedDate(cell.textContent);
@@ -49,11 +49,15 @@
   function addPlaceholder(bodyId,colspan,text){
     const body=$(bodyId);if(!body)return;
     const visible=[...body.querySelectorAll('tr')].some(row=>!row.classList.contains('cvm-reset-placeholder')&&row.style.display!=='none'&&row.querySelector('[data-label]'));
-    body.querySelectorAll('.cvm-reset-placeholder').forEach(x=>x.remove());
+    let placeholder=body.querySelector('.cvm-reset-placeholder');
     if(!visible){
-      const tr=document.createElement('tr');tr.className='cvm-reset-placeholder';
-      const td=document.createElement('td');td.colSpan=colspan;td.textContent=text;
-      tr.appendChild(td);body.appendChild(tr);
+      if(!placeholder){
+        placeholder=document.createElement('tr');placeholder.className='cvm-reset-placeholder';
+        const td=document.createElement('td');td.colSpan=colspan;placeholder.appendChild(td);body.appendChild(placeholder);
+      }
+      placeholder.firstElementChild.textContent=text;
+    }else if(placeholder){
+      placeholder.remove();
     }
   }
 
@@ -132,8 +136,9 @@
     if(topActions&&!$('resetEverythingBtn')){
       const b=makeResetButton('resetEverythingBtn','Tout remettre à zéro',resetEverything);
       topActions.insertBefore(b,$('logoutBtn')||null);
-      if($('dashboard')?.classList.contains('hidden'))b.classList.add('hidden');
     }
+    const resetAll=$('resetEverythingBtn');
+    if(resetAll)resetAll.classList.toggle('hidden',dashboard.classList.contains('hidden'));
   }
 
   async function latestMetrics(){
