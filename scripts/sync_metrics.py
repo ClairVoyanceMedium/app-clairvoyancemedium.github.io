@@ -168,7 +168,6 @@ else:
     except Exception as exc:
         errors.append(f'Abonnements OneSignal indisponibles: {exc}')
 
-    # Historique push : on récupère jusqu'à 200 notifications au lieu de seulement 50.
     try:
         limit = 50
         max_history = 200
@@ -191,6 +190,9 @@ else:
                     'title': headings.get('fr') or headings.get('en') or msg.get('name') or '',
                     'message': contents.get('fr') or contents.get('en') or '',
                     'queued_at': unix_or_iso(msg.get('queued_at')),
+                    'send_after': unix_or_iso(msg.get('send_after')),
+                    'delayed_option': msg.get('delayed_option') or '',
+                    'delivery_time_of_day': msg.get('delivery_time_of_day') or '',
                     'completed_at': unix_or_iso(msg.get('completed_at')),
                     'successful': int(msg.get('successful') or 0),
                     'received': int(msg.get('received') or 0),
