@@ -54,6 +54,17 @@
     openStep.classList.add('ok');
     notifyStep.classList.add('active');
   }
+  async function ensurePushSubscribed(OneSignal){
+    if(!OneSignal || !OneSignal.Notifications.permission)return false;
+    try{
+      await OneSignal.User.PushSubscription.optIn();
+      await OneSignal.User.addTags({push_permission:'granted',push_opted_in:'true',platform:'ios_web'});
+      if(OneSignal.User.trackEvent)await OneSignal.User.trackEvent('push_subscription_refreshed');
+      return OneSignal.User.PushSubscription.optedIn===true;
+    }catch(e){
+      return false;
+    }
+  }
 
   if(standalone){
     markInstalled();
@@ -80,9 +91,12 @@
       await OneSignal.User.addTags({brand:'clairvoyancemedium',platform:'ios_web',distribution:'pwa'});
       if(OneSignal.User.trackEvent) await OneSignal.User.trackEvent('app_open');
       if(OneSignal.Notifications.permission){
+        const optedIn=await ensurePushSubscribed(OneSignal);
         notifyStep.classList.add('ok');
         notifyStep.classList.remove('active');
-        setStatus('<span class="good">Notifications activées.</span> Cet appareil est enregistré dans les métriques push.');
+        setStatus(optedIn
+          ? '<span class="good">Notifications activées.</span> Cet appareil est bien abonné aux notifications push.'
+          : '<span class="warn">Autorisation présente, mais l’abonnement push est encore en cours d’activation.</span> Réouvrez l’application dans quelques secondes.');
       }else if(standalone){
         setStatus('<span class="good">Application prête.</span> Touchez <strong>Activer les notifications</strong>.');
       }
@@ -100,12 +114,14 @@
       if(!supported){setStatus('<span class="warn">Les notifications Web Push ne sont pas prises en charge sur cet appareil.</span>');return;}
       await OneSignalClient.Notifications.requestPermission();
       if(OneSignalClient.Notifications.permission){
+        const optedIn=await ensurePushSubscribed(OneSignalClient);
         notifyStep.classList.add('ok');notifyStep.classList.remove('active');
-        await OneSignalClient.User.addTags({push_permission:'granted',platform:'ios_web'});
         if(OneSignalClient.User.trackEvent) await OneSignalClient.User.trackEvent('push_permission_granted');
-        setStatus('<span class="good">Notifications activées.</span> Vous pourrez désormais recevoir les campagnes ClairVoyanceMedium.com.');
+        setStatus(optedIn
+          ? '<span class="good">Notifications activées.</span> Vous pourrez désormais recevoir les campagnes ClairVoyanceMedium.com.'
+          : '<span class="warn">Autorisation accordée, activation OneSignal en cours.</span> Réouvrez l’application dans quelques secondes.');
       }else{
-        await OneSignalClient.User.addTag('push_permission','not_granted');
+        await OneSignalClient.User.addTags({push_permission:'not_granted',push_opted_in:'false'});
         setStatus('<span class="warn">Notifications non autorisées.</span> Vous pourrez modifier ce choix dans les réglages de l’iPhone.');
       }
     }catch(e){setStatus('<span class="warn">Impossible d’ouvrir la demande de notification.</span> Vérifiez que l’application a été lancée depuis l’écran d’accueil.');}
