@@ -29,9 +29,9 @@
   }
 
   function resetHiddenRows(bodyId,label,resetName){
-    const body=$(bodyId);if(!body)return{visible:0,dates:[]};
+    const body=$(bodyId);if(!body)return{visible:0,dates:[],play:0};
     const limit=cutoff(resetName);
-    let visible=0;
+    let visible=0,play=0;
     const dates=[];
     [...body.querySelectorAll('tr')].forEach(row=>{
       if(row.classList.contains('cvm-reset-placeholder'))return;
@@ -41,9 +41,14 @@
       const hidden=Boolean(limit&&Number.isFinite(when)&&when<=limit);
       row.style.display=hidden?'none':'';
       row.dataset.cvmResetHidden=hidden?'1':'0';
-      if(!hidden){visible++;if(Number.isFinite(when))dates.push(when)}
+      if(!hidden){
+        visible++;
+        if(Number.isFinite(when))dates.push(when);
+        const source=row.querySelector('[data-label="Source"]')?.textContent||'';
+        if(source.includes('Google Play'))play++;
+      }
     });
-    return{visible,dates};
+    return{visible,dates,play};
   }
 
   function addPlaceholder(bodyId,colspan,text){
@@ -81,11 +86,12 @@
       if(cutoff('installations')){
         const c=$('installFeedCount');if(c)c.textContent=installs.visible+' installation'+(installs.visible>1?'s':'')+' depuis la remise à zéro';
         if($('installTotal'))$('installTotal').textContent=String(installs.visible);
+        if($('installPlay'))$('installPlay').textContent=String(installs.play);
         if($('install24')){
           const now=Date.now();
           $('install24').textContent=String(installs.dates.filter(t=>now-t<=86400000).length);
         }
-        addPlaceholder('installationsBody',12,'Installations remises à zéro. Les prochaines détections apparaîtront ici.');
+        addPlaceholder('installationsBody',13,'Installations remises à zéro. Les prochaines détections apparaîtront ici.');
       }
     }finally{applying=false}
   }
