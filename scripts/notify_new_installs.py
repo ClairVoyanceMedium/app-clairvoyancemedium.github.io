@@ -5,28 +5,25 @@ import hashlib
 import io
 import json
 import os
-import sys
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+import uuid
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 APP_ID = os.environ.get('ONESIGNAL_APP_ID', '').strip()
 API_KEY = os.environ.get('ONESIGNAL_API_KEY', '').strip()
 ADMIN_EXTERNAL_ID = os.environ.get('ADMIN_EXTERNAL_ID', 'cvm_admin_frederick').strip()
-STATE_PATH = Path(os.environ.get('INSTALL_ALERT_STATE', 'install-alert-state.json'))
 OUTPUT_PATH = Path(os.environ.get('INSTALL_EVENTS_OUTPUT', 'install-events-private.json'))
 ADMIN_URL = os.environ.get(
     'ADMIN_DASHBOARD_URL',
     'https://clairvoyancemedium.github.io/app-clairvoyancemedium.github.io/admin.html',
 ).strip()
 TRACKING_START_RAW = os.environ.get('TRACKING_START', '2026-09-16T15:20:00Z').strip()
-
-if not APP_ID or not API_KEY:
-    sys.exit('ONESIGNAL_APP_ID et ONESIGNAL_API_KEY sont obligatoires.')
+LOOKBACK_HOURS = max(1, min(24 * 7, int(os.environ.get('INSTALL_ALERT_LOOKBACK_HOURS', '168'))))
 
 HEADERS = {
     'Authorization': f'Key {API_KEY}',
@@ -125,7 +122,7 @@ def parse_tags(value):
         if isinstance(obj, dict):
             return {str(k): str(v) for k, v in obj.items()}
     except json.JSONDecodeError:
-        return {}
+        pass
     return {}
 
 
@@ -138,10 +135,6 @@ def ntype(value):
 
 def truthy(value):
     return str(value or '').strip().lower() in {'1', 'true', 't', 'yes', 'y'}
-
-
-def subscription_hash(subscription_id):
-    return hashlib.sha256(subscription_id.encode('utf-8')).hexdigest()
 
 
 def short_install_id(row, tags):
@@ -162,8 +155,7 @@ def platform_name(row, tags):
 
 
 def install_time(row, tags):
-    tagged = parse_dt(tags.get('first_install_ts'))
-    return tagged or parse_dt(row.get('created_at'))
+    return parse_dt(tags.get('first_install_ts')) or parse_dt(row.get('created_at'))
 
 
 def local_time_text(dt, timezone_id):
@@ -214,7 +206,15 @@ def safe_event(row):
     }
 
 
-def send_admin_alert(event):
+def alert_idempotency_key(subscription_id):
+    # UUID RFC 9562 stable pour cette installation. OneSignal déduplique les
+    # répétitions pendant 30 jours; on ne recontrôle ici que les 7 derniers jours.
+    logical_id = f'https://www.clairvoyancemedium.com/install-alert/{APP_ID}/{subscription_id}'
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, logical_id))
+
+
+def send_admin_alert(row, event):
+    subscription_id = str(row.get('id', '') or '').strip()
     device = event['device_model'] or 'appareil inconnu'
     country = event['country'] or 'pays inconnu'
     body = (
@@ -230,9 +230,10 @@ def send_admin_alert(event):
             'en': 'New installation detected',
         },
         'contents': {'fr': body, 'en': body},
-        'name': 'CVM install alert ' + datetime.now(timezone.utc).isoformat(timespec='seconds'),
+        'name': 'CVM installation ' + event['anonymous_id'],
         'url': ADMIN_URL,
-        'data': {
+        'idempotency_key': alert_idempotency_key(subscription_id),
+        'custom_data': {
             'event': 'new_installation',
             'anonymous_id': event['anonymous_id'],
             'platform': event['platform'],
@@ -245,103 +246,96 @@ def send_admin_alert(event):
         payload=payload,
     )
     if not result.get('id'):
-        raise RuntimeError('OneSignal n’a pas créé l’alerte administrateur: ' + json.dumps(result, ensure_ascii=False))
+        raise RuntimeError(
+            'OneSignal n’a pas accepté l’alerte administrateur: '
+            + json.dumps(result, ensure_ascii=False)
+        )
     return result['id']
 
 
-tracking_start = parse_dt(TRACKING_START_RAW) or datetime.now(timezone.utc)
-rows = export_rows()
-current_hashes = []
+now = datetime.now(timezone.utc)
+tracking_start = parse_dt(TRACKING_START_RAW) or now
+lookback_start = max(tracking_start, now - timedelta(hours=LOOKBACK_HOURS))
+errors = []
 feed = []
-row_by_hash = {}
+alert_attempts = 0
+alert_acceptances = 0
+
+if not APP_ID or not API_KEY:
+    errors.append('Clés OneSignal absentes: détection des installations impossible.')
+    rows = []
+else:
+    try:
+        rows = export_rows()
+    except Exception as exc:
+        rows = []
+        errors.append(f'Export OneSignal impossible: {exc}')
 
 for row in rows:
     sid = str(row.get('id', '') or '').strip()
     if not sid:
         continue
-    created = parse_dt(row.get('created_at'))
-    if not created:
+    tags = parse_tags(row.get('tags'))
+    detected = install_time(row, tags)
+    if not detected or detected < tracking_start:
         continue
-    h = subscription_hash(sid)
-    current_hashes.append(h)
-    row_by_hash[h] = row
-    if created >= tracking_start:
-        event = safe_event(row)
-        if not event['is_admin']:
-            feed.append(event)
+
+    event = safe_event(row)
+    if event['is_admin']:
+        continue
+    feed.append(event)
+
+    if detected < lookback_start:
+        continue
+
+    alert_attempts += 1
+    try:
+        message_id = send_admin_alert(row, event)
+        alert_acceptances += 1
+        print(json.dumps({
+            'status': 'install_alert_accepted_or_deduplicated',
+            'message_id': message_id,
+            'anonymous_id': event['anonymous_id'],
+            'platform': event['platform'],
+            'device_model': event['device_model'],
+            'country': event['country'],
+            'detected_at': event['detected_at'],
+        }, ensure_ascii=False))
+    except Exception as exc:
+        errors.append(f"Alerte {event['anonymous_id']} non envoyée: {exc}")
 
 feed.sort(key=lambda x: x.get('detected_at') or '', reverse=True)
-
-state = None
-if STATE_PATH.exists():
-    try:
-        state = json.loads(STATE_PATH.read_text(encoding='utf-8'))
-    except Exception:
-        state = None
-
-if not isinstance(state, dict):
-    state = {
-        'initialized_at': datetime.now(timezone.utc).isoformat(),
-        'known_hashes': sorted(set(current_hashes)),
-        'alerts_sent': 0,
-    }
-    alerts_sent_now = 0
-    print('Première exécution: les appareils déjà présents servent de référence, aucune alerte rétroactive.')
-else:
-    known = set(str(x) for x in state.get('known_hashes', []) if x)
-    alerts_sent_now = 0
-    for h in sorted(set(current_hashes) - known):
-        row = row_by_hash[h]
-        created = parse_dt(row.get('created_at'))
-        event = safe_event(row)
-        if created and created >= tracking_start and not event['is_admin']:
-            message_id = send_admin_alert(event)
-            alerts_sent_now += 1
-            print(json.dumps({
-                'status': 'install_alert_sent',
-                'message_id': message_id,
-                'anonymous_id': event['anonymous_id'],
-                'platform': event['platform'],
-                'device_model': event['device_model'],
-                'country': event['country'],
-                'detected_at': event['detected_at'],
-            }, ensure_ascii=False))
-        known.add(h)
-
-    state['known_hashes'] = sorted(known)
-    state['alerts_sent'] = int(state.get('alerts_sent') or 0) + alerts_sent_now
-    state['last_checked_at'] = datetime.now(timezone.utc).isoformat()
-
-STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
-STATE_PATH.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding='utf-8')
-
-now = datetime.now(timezone.utc)
-last_24h = 0
+last_24h = sum(
+    1
+    for event in feed
+    if (dt := parse_dt(event.get('detected_at'))) is not None
+    and (now - dt).total_seconds() <= 86400
+)
 platform_counts = {}
 for event in feed:
-    dt = parse_dt(event.get('detected_at'))
-    if dt and (now - dt).total_seconds() <= 86400:
-        last_24h += 1
     platform_counts[event['platform']] = platform_counts.get(event['platform'], 0) + 1
 
 output = {
     'generated_at': now.isoformat(),
     'tracking_start': tracking_start.isoformat(),
     'privacy': (
-        'Flux privé: aucun token push, aucune adresse IP et aucun identifiant OneSignal complet. '
-        'Le pays provient des données réseau OneSignal. Aucune localisation GPS n’est activée par ce système.'
+        'Flux privé et pseudonymisé: aucun token push, aucune adresse IP et aucun identifiant OneSignal complet. '
+        'Le pays est une information réseau approximative fournie par OneSignal. Aucune localisation GPS n’est activée.'
     ),
     'summary': {
         'installations_detected': len(feed),
         'installations_last_24h': last_24h,
-        'alerts_sent_now': alerts_sent_now,
-        'alerts_sent_total': int(state.get('alerts_sent') or 0),
+        'alert_attempts': alert_attempts,
+        'alert_requests_accepted_or_deduplicated': alert_acceptances,
     },
     'platform_counts': platform_counts,
+    'errors': errors,
     'installations': feed[:500],
 }
 OUTPUT_PATH.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding='utf-8')
 print(
     f"Flux installations écrit dans {OUTPUT_PATH}: {len(feed)} installation(s) depuis l’activation, "
-    f"{alerts_sent_now} nouvelle(s) alerte(s) envoyée(s)."
+    f"{alert_attempts} vérification(s) d’alerte, {len(errors)} avertissement(s)."
 )
+for error in errors:
+    print('AVERTISSEMENT:', error)
