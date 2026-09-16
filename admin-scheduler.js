@@ -216,3 +216,10 @@
 
   resetHorizontalPosition();
 })();
+
+(()=>{
+  const script=document.createElement('script');
+  script.src='admin-resets.js?v=20260916-1';
+  script.defer=true;
+  document.body.appendChild(script);
+})();
